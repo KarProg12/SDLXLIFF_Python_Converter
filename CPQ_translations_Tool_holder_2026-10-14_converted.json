@@ -1,0 +1,911 @@
+{
+    "input_file": "CPQ_translations_Tool_holder_2026-10-14.xlsx.zip",
+    "source_language": "en-US",
+    "target_language": "pl-PL",
+    "total_segments": 100,
+    "selected_segments_count": 0,
+    "excluded_rule": "status Translated/Translated Approved lub match 100%",
+    "segments": [
+        {
+            "trans_unit_id": "31afef63-cdbf-4582-ad42-e59e3a3ad5df",
+            "segment_id": "1",
+            "source": "Configure",
+            "target": "Konfiguruj",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "0ec85bc6-3030-49a1-aaf1-b332308e392b",
+            "segment_id": "2",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "99",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "0848874a-ba42-42fc-8edf-a7ec7d38f488",
+            "segment_id": "3",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "94",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "7bc8aeea-f591-4713-ba0a-33429d3f5642",
+            "segment_id": "4",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "89bb1403-c7ef-4dab-b467-0d0fe8af729e",
+            "segment_id": "5",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "68c94c0b-3e64-4f3b-8ed2-3cfe89fff228",
+            "segment_id": "6",
+            "source": "Configure",
+            "target": "Konfiguruj",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "f0f80351-b551-4532-9a57-7500e91e034c",
+            "segment_id": "7",
+            "source": "Dimensions",
+            "target": "Wymiary",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "d46eb399-7844-40d5-a2a6-9cad168fa417",
+            "segment_id": "8",
+            "source": "Dimensional drawing",
+            "target": "Rysunek wymiarowy",
+            "status": "Translated",
+            "match_percent": "96",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "dff55d87-3c32-44cf-a1d5-23dbdf13107b",
+            "segment_id": "9",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "3e0977bb-088f-4f0b-baac-866a6c35e831",
+            "segment_id": "10",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "a32bdf76-3671-4369-830f-48936d342bde",
+            "segment_id": "11",
+            "source": "Application torque max",
+            "target": "Maks. moment obrotowy zastosowania",
+            "status": "Translated",
+            "match_percent": "63",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "4a0b7727-ecbd-48c3-a1c0-44eaba4de9ae",
+            "segment_id": "12",
+            "source": "This value is the upper limit for the tools to be displayd in the list of tools (\"Tool description\")",
+            "target": "Wartość ta stanowi górną granicę dla narzędzi, które mają być wyświetlane na liście narzędzi („Opis narzędzia”)",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "7c9e1e71-7706-4c0c-8c01-b668c264b860",
+            "segment_id": "13",
+            "source": "Application torque min",
+            "target": "Min. moment obrotowy zastosowania",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "210f674b-c069-4c35-b476-3ff320c57518",
+            "segment_id": "14",
+            "source": "This value is the lower limit for the tools to be displayd in the list of tools (\"Tool description\")",
+            "target": "Wartość ta stanowi dolną granicę dla narzędzi, które mają być wyświetlane na liście narzędzi („Opis narzędzia”)",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "19d74614-3089-420e-b2f6-ac5ea2f47dd3",
+            "segment_id": "15",
+            "source": "Fixation",
+            "target": "Mocowanie",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "bca646e3-351e-424a-af88-7da3eb81d3b4",
+            "segment_id": "16",
+            "source": "1.",
+            "target": "1.",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "bca646e3-351e-424a-af88-7da3eb81d3b4",
+            "segment_id": "17",
+            "source": "Application Setup",
+            "target": "Konfiguracja zastosowania",
+            "status": "Translated",
+            "match_percent": "65",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "9b3ce305-c001-41ed-95cb-d364c4f58694",
+            "segment_id": "18",
+            "source": "Please select your Atlas Copco Tool in order to find the right Tool Holder with the correct Tool Holder-Torque Arm combination.",
+            "target": "Wybierz narzędzie firmy Atlas Copco, aby znaleźć odpowiedni uchwyt narzędziowy wraz z właściwą kombinacją uchwytu i ramienia reakcyjnego.",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "9b3ce305-c001-41ed-95cb-d364c4f58694",
+            "segment_id": "19",
+            "source": "You can also select a Tool Name/Description directly from the dropdown list",
+            "target": "Można również wybrać nazwę/opis narzędzia bezpośrednio z listy rozwijanej.",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "cd401b59-8e4f-4b53-a212-fa5c96f76991",
+            "segment_id": "20",
+            "source": "Mounted accessories can interfere with tool holders",
+            "target": "Zamontowane akcesoria mogą kolidować z uchwytami narzędziowymi.",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "94f52a99-3a94-407f-b66d-8b2b2e3b5c71",
+            "segment_id": "21",
+            "source": "For SMC arms, please note that the arm is mounted in the ceiling as default.",
+            "target": "W przypadku ramion SMC należy pamiętać, że jest ono domyślnie zamontowane do sufitu.",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "ad5a7b11-1d68-4c51-ada3-946c39fed42b",
+            "segment_id": "22",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "50921262-fe36-4bef-bf7b-3edf7c97cfd0",
+            "segment_id": "23",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "84866ec8-8184-4dee-a13a-50376248e23f",
+            "segment_id": "24",
+            "source": "Power type",
+            "target": "Typ zasilania",
+            "status": "Translated",
+            "match_percent": "96",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "517ae3ce-dc33-42f6-9efa-c83e46dbbb8f",
+            "segment_id": "25",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "cbeb094a-9589-4b75-8034-53ef5c2a9b86",
+            "segment_id": "26",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b5a75a60-fca0-4f39-b578-9dc36332ac18",
+            "segment_id": "27",
+            "source": "Required MAX torque",
+            "target": "Wymagany MAKS. moment obrotowy",
+            "status": "Translated",
+            "match_percent": "74",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "22447068-6585-46dd-9557-0ead121e0a03",
+            "segment_id": "28",
+            "source": "Up to which tool torque shall the application not get damaged?",
+            "target": "Do jakiej górnej wartości momentu obrotowego narzędzie w danym zastosowaniu nie ulegnie uszkodzeniu?",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "6442e831-9a5d-4871-9f79-1d2b33a00624",
+            "segment_id": "29",
+            "source": "Required MIN torque",
+            "target": "Wymagany MIN. moment obrotowy",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "18c12a1a-dae3-473a-96c2-7fa0b0b8e22d",
+            "segment_id": "30",
+            "source": "Which tool torque shall the application be able to handle at least?",
+            "target": "Do jakiej dolnej wartości momentu obrotowego narzędzie w danym zastosowaniu powinno być w stanie pracować?",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "41c8d512-76f4-42f7-a55b-74925299b1c8",
+            "segment_id": "31",
+            "source": "Description & Drawing",
+            "target": "Opis i rysunek",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "010837ad-fe54-403c-a294-2b844eb4af16",
+            "segment_id": "32",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "71e270e6-479d-4a98-a47c-a609f18535fb",
+            "segment_id": "33",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "c0ea4210-48bc-4013-b62a-206ea31514e0",
+            "segment_id": "34",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "5fb3146f-ffaa-4e38-ada1-a59d6e738c2a",
+            "segment_id": "35",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b8bc9a99-3df6-478f-8513-97600f60f12f",
+            "segment_id": "36",
+            "source": "Select your Tightening Orientation",
+            "target": "Wybierz orientację dokręcania",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "25549aac-1075-44f1-b901-a5a45f4f1a5b",
+            "segment_id": "37",
+            "source": "Orientation",
+            "target": "Orientacja",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "c8e42def-ced6-423b-b8c4-d946b2cbaa30",
+            "segment_id": "38",
+            "source": "Article number",
+            "target": "Numer artykułu",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "66474410-3128-4a63-a4f4-0edc50cef5e3",
+            "segment_id": "39",
+            "source": "Specific model",
+            "target": "Konkretny model",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "33a893b3-fa43-436f-b44b-ca57e3d98fc4",
+            "segment_id": "40",
+            "source": "2.",
+            "target": "2.",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "33a893b3-fa43-436f-b44b-ca57e3d98fc4",
+            "segment_id": "41",
+            "source": "Select your Tool",
+            "target": "Wybierz narzędzie",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b7c660a5-b6c0-457e-a325-86aa5c76cc57",
+            "segment_id": "42",
+            "source": "Article number",
+            "target": "Numer artykułu",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "f6f8d34e-9260-417c-8ff8-483d35004e2e",
+            "segment_id": "43",
+            "source": "Specific model",
+            "target": "Konkretny model",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "3d1afade-d599-47e3-bfc0-280fdfd50ec8",
+            "segment_id": "44",
+            "source": "Dimensional drawing",
+            "target": "Rysunek wymiarowy",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "9861c162-f915-4fe4-9866-84b38b6e1010",
+            "segment_id": "45",
+            "source": "4.",
+            "target": "4.",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "9861c162-f915-4fe4-9866-84b38b6e1010",
+            "segment_id": "46",
+            "source": "Select your desired Tool Holder",
+            "target": "Wybierz żądany uchwyt narzędziowy",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "1470c887-ca3c-434f-b69b-645481f8a7e3",
+            "segment_id": "47",
+            "source": "Family",
+            "target": "Rodzina",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "ee041f76-01d3-47e8-aac2-67b03e1e3ade",
+            "segment_id": "48",
+            "source": "Tool type",
+            "target": "Rodzaj narzędzia",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "5594bf55-a832-49ac-9bef-ac75c7a0efc5",
+            "segment_id": "49",
+            "source": "Article number",
+            "target": "Numer artykułu",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "944c5847-12c4-4f02-88a3-3a53664545f8",
+            "segment_id": "50",
+            "source": "Specific model",
+            "target": "Konkretny model",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "5d4d60cb-5349-410d-bdab-bb0f87dab167",
+            "segment_id": "51",
+            "source": "Family",
+            "target": "Rodzina",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "58b9b284-d3dc-4c58-aae4-a75fcadc98ca",
+            "segment_id": "52",
+            "source": "3.",
+            "target": "3.",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "58b9b284-d3dc-4c58-aae4-a75fcadc98ca",
+            "segment_id": "53",
+            "source": "Select your Torque Arm",
+            "target": "Wybierz ramię reakcyjne",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "7a9d5b47-2ca8-4455-89ed-21fa50e20f1e",
+            "segment_id": "54",
+            "source": "Define Min and Max Torque",
+            "target": "Określ min. i maks. moment obrotowy",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "ee5052cd-f0d7-4d39-b86f-8230b92bac91",
+            "segment_id": "55",
+            "source": "Travel Length",
+            "target": "Długość skoku",
+            "status": "Translated",
+            "match_percent": "96",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "8338029b-9cfe-4e8d-a4b2-eb9f4204d8f3",
+            "segment_id": "56",
+            "source": "Tool holder interface:",
+            "target": "Interfejs uchwytu narzędziowego:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "cddae66c-81e6-4788-9c19-3b570459f970",
+            "segment_id": "57",
+            "source": "Max torque =",
+            "target": "Maks. moment obrotowy =",
+            "status": "Translated",
+            "match_percent": "82",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b6c26aa9-6ac4-4f76-887a-b2bc25c32ccd",
+            "segment_id": "58",
+            "source": "Mounting type:",
+            "target": "Rodzaj montażu:",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "cb9f1099-7c11-428a-a5e0-8a1841e9ce46",
+            "segment_id": "59",
+            "source": "Overview",
+            "target": "Informacje ogólne",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "18c28b35-51a9-4e07-91b8-b94f70dbef9f",
+            "segment_id": "60",
+            "source": "Info group",
+            "target": "Grupa informacyjna",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "4882b1dc-7543-4cae-ba3e-97e4228bcc43",
+            "segment_id": "61",
+            "source": "Tightening orientation",
+            "target": "Orientacja dokręcania",
+            "status": "Translated",
+            "match_percent": "67",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "5f7be124-8a4d-4613-880f-e1b6b096e92b",
+            "segment_id": "62",
+            "source": "Description",
+            "target": "Opis",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "14ec1227-4a86-41c4-98b8-29e7e8256144",
+            "segment_id": "63",
+            "source": "Description",
+            "target": "Opis",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "7833ed46-cb30-43a8-b7d1-595bc5e8c785",
+            "segment_id": "64",
+            "source": "Tool holder",
+            "target": "Uchwyt narzędziowy",
+            "status": "Translated",
+            "match_percent": "70",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "064a4900-9cc0-4bb6-bca7-6c6c2ab86020",
+            "segment_id": "65",
+            "source": "Article number",
+            "target": "Numer artykułu",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b9627bdb-dfcd-49a6-9224-0a7a18b4bf14",
+            "segment_id": "66",
+            "source": "Qty",
+            "target": "Ilość",
+            "status": "Translated",
+            "match_percent": "96",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "57368521-67ab-4b2b-97b4-b3cb5b7d5a3d",
+            "segment_id": "67",
+            "source": "Qty",
+            "target": "Ilość",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "273f1489-6696-4989-b599-99aca220612f",
+            "segment_id": "68",
+            "source": "Article number",
+            "target": "Numer artykułu",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "299e4b92-2c8b-4981-8fe3-9eb7f3ad1928",
+            "segment_id": "69",
+            "source": "Description",
+            "target": "Opis",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "8d34ea5b-90b6-4d51-90cd-652d6297dda3",
+            "segment_id": "70",
+            "source": "Torque arm adapter",
+            "target": "Adapter ramienia reakcyjnego",
+            "status": "Translated",
+            "match_percent": "73",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "8486f97f-d18d-4f62-bd73-e6f439741f82",
+            "segment_id": "71",
+            "source": "Include Torq Arm to the Item List?",
+            "target": "Czy dodać ramię reakcyjne do listy artykułów?",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b8a0c7be-31b3-4161-be5c-e417843968af",
+            "segment_id": "72",
+            "source": "Article number",
+            "target": "Numer artykułu",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "385828b6-2871-440b-aa83-6fc7ac7d6a46",
+            "segment_id": "73",
+            "source": "Description",
+            "target": "Opis",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "8ff6273c-dad2-4416-bcd2-c2306fcab62b",
+            "segment_id": "74",
+            "source": "Family",
+            "target": "Rodzina",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "eab3446c-51c4-4db9-be94-fdcb890d0ce1",
+            "segment_id": "75",
+            "source": "Torque arm",
+            "target": "Ramię reakcyjne",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "382178fb-3634-41df-ad02-f123ce452868",
+            "segment_id": "76",
+            "source": "Qty",
+            "target": "Ilość",
+            "status": "Translated",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "4fece880-06e9-4bc9-8c7e-ddcadd6b8a73",
+            "segment_id": "77",
+            "source": "Configuration for your {0} tool",
+            "target": "Konfiguracja dla narzędzia {0}",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "0d1216e6-8d88-4f3c-ab93-4ecf571ac85a",
+            "segment_id": "78",
+            "source": "Tool Holder",
+            "target": "Uchwyt narzędziowy",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "dffdf6bb-64c4-4e50-885e-450e33d84d72",
+            "segment_id": "79",
+            "source": "Angle Plate",
+            "target": "Płytka kątowa",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "e8b196e0-52aa-420a-a7aa-dda836d8580d",
+            "segment_id": "80",
+            "source": "Angular Tool Holder",
+            "target": "Kątowy uchwyt narzędziowy",
+            "status": "Translated",
+            "match_percent": "77",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "eb638e7c-a698-4043-bd41-10af8fc8daaa",
+            "segment_id": "81",
+            "source": "Diameter",
+            "target": "Średnica",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "4415d0f7-0238-41b0-95fd-6e0e755b41cd",
+            "segment_id": "82",
+            "source": "Hole interface",
+            "target": "Rozmiar otworu",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "5a750a38-a631-41a1-a2b1-f0a9cbe75cf9",
+            "segment_id": "83",
+            "source": "N/A",
+            "target": "NIE DOTYCZY",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "55025c53-61b8-449b-b6ef-4b8a6b3dd112",
+            "segment_id": "84",
+            "source": "Spline",
+            "target": "Wielowypust",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "c4983922-ed25-426d-9101-7ff525da10d4",
+            "segment_id": "85",
+            "source": "No",
+            "target": "Nie",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b83b3a88-c440-4bc9-87a8-ceec6a61e538",
+            "segment_id": "86",
+            "source": "Yes",
+            "target": "Tak",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "cc1a0a07-6154-433c-89c0-dd9f450ce63c",
+            "segment_id": "87",
+            "source": "Fixed",
+            "target": "Stały",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "7c101f75-e959-4d4b-905f-b0fa5102b307",
+            "segment_id": "88",
+            "source": "Swiveling",
+            "target": "Połączenia obrotowe",
+            "status": "Translated",
+            "match_percent": "90",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "25f2613f-9b42-4ddd-a882-d99c3eccbff9",
+            "segment_id": "89",
+            "source": "Front Clamp Tool Holder",
+            "target": "Uchwyt narzędziowy z przednim zaciskiem",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "766b8447-e698-4581-80b7-b46cb1b35767",
+            "segment_id": "90",
+            "source": "Horizontal",
+            "target": "Poziomy",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b7574ec0-4a9d-427e-bb1e-3d4e5f57d916",
+            "segment_id": "91",
+            "source": "Mounting Plate",
+            "target": "Płytka montażowa",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "06ae7521-e6d9-4b1d-bba9-664ab9b02435",
+            "segment_id": "92",
+            "source": "Pistol",
+            "target": "Pistoletowy",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b0fafd44-b170-45c5-b657-a47a00513fc1",
+            "segment_id": "93",
+            "source": "Pistol Tool Holder",
+            "target": "Pistoletowy uchwyt narzędziowy",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "2bd0b778-ac22-4b76-9031-4157e4dbfa14",
+            "segment_id": "94",
+            "source": "Battery",
+            "target": "Akumulator",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "e5642260-a32a-4327-844d-6d677edf5e82",
+            "segment_id": "95",
+            "source": "Cable",
+            "target": "Kabel",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "2a709594-6cd6-4719-9160-4a528adee180",
+            "segment_id": "96",
+            "source": "Spline Tool Holder",
+            "target": "Uchwyt narzędziowy z wielowypustem",
+            "status": "Translated",
+            "match_percent": "77",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "fd9f54c3-cd7f-42d1-ba55-a39ca5920e1c",
+            "segment_id": "97",
+            "source": "Straight",
+            "target": "Prosty",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "9a17bc97-40f4-415e-abcc-64f2fc56ef24",
+            "segment_id": "98",
+            "source": "Swiveling Tool Holder",
+            "target": "Obrotowy uchwyt narzędziowy",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "abdf6e2b-2ea3-4738-b198-58341832e9a1",
+            "segment_id": "99",
+            "source": "Universal Tool Holder",
+            "target": "Uniwersalny uchwyt narzędziowy",
+            "status": "ApprovedTranslation",
+            "match_percent": "100",
+            "excluded": true
+        },
+        {
+            "trans_unit_id": "b69c3d67-590d-4eee-a436-e8b0f2786b4f",
+            "segment_id": "100",
+            "source": "Vertical",
+            "target": "Pionowy",
+            "status": "Translated",
+            "match_percent": null,
+            "excluded": true
+        }
+    ],
+    "selected_segments": []
+}
