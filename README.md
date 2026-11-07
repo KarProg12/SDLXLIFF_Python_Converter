@@ -1,26 +1,25 @@
-# SDLXLIFF -> JSON
+Extract source from .sdlxliff to .txt
+What does it do?
 
-## Zawartość
-- `sdlxliff_to_json.py` — program konwertujący SDLXLIFF (lub ZIP z SDLXLIFF) do JSON i wyodrębniający angielskie source.
-- `CPQ_translations_Tool_holder_2026-10-14_converted.json` — wynik konwersji przesłanego przykładowego pliku.
-- `CPQ_translations_Tool_holder_2026-10-14_source.txt` — source spełniające kryteria (w tym przykładzie plik jest pusty, bo nie znaleziono pasujących segmentów).
-- `CPQ_translations_Tool_holder_2026-10-14.xlsx.zip` — oryginalne archiwum wejściowe.
+This script reads a Trados translation file (.sdlxliff), extracts all source texts (`<source>`) and saves each one on a separate line in sources.txt.
+How it works
 
-## Uruchomienie
-Wymagany Python 3.9+; nie trzeba instalować dodatkowych bibliotek.
+    Load file — opens the .sdlxliff file as an XML document.
+    Auto-detect namespace — extracts the XLIFF namespace URI (e.g. urn:oasis:names:tc:xliff:document:1.2) from the root <xliff> tag, so you don't have to hardcode it.
+    Find segments — finds all <source> tags in the whole file.
+    Extract text — collects plain text from each <source> tag, including text nested in Trados inline tags (e.g. <mrk>).
+    Save to .txt — writes each non-empty text on a new line to sources.txt using utf-8 encoding.
 
-```bash
-python sdlxliff_to_json.py CPQ_translations_Tool_holder_2026-10-14.xlsx.zip
-```
+## Files
 
-Można też podać bezpośrednio plik `.sdlxliff`:
+    Input: program asks user to input filename or absolute path to file
+    Output: sources.txt
 
-```bash
-python sdlxliff_to_json.py plik.sdlxliff
-```
+## Requirements
 
-Program tworzy obok pliku wejściowego:
-- `<nazwa>_converted.json` — wszystkie segmenty wraz ze statusem i procentem match.
-- `<nazwa>_source.txt` — wyłącznie teksty `source`, które nie są oznaczone jako `Translated`, `Translated Approved` / `ApprovedTranslation` ani 100% match.
+    Python 3 only, no external dependencies. Uses the built-in xml.etree.ElementTree module.
 
-Uwaga: w tym konkretnym pliku SDLXLIFF znaleziono 100 segmentów. Wszystkie mają status `Translated` lub `ApprovedTranslation`, więc wynik filtrowania zawiera 0 segmentów.
+## Usage
+
+    python sdlxliff_to_sources_txt.py
+
