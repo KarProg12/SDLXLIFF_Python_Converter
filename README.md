@@ -1,25 +1,20 @@
-Extract source from .sdlxliff to .txt
-What does it do?
+# SDLXLIFF Source Text Extractor
 
-This script reads a Trados translation file (.sdlxliff), extracts all source texts (`<source>`) and saves each one on a separate line in sources.txt.
-How it works
+A lightweight Python desktop application designed to parse localization files (`.sdlxliff`, `.xliff`, `.xml`) and extract all raw source text segments into a single plain text file.
 
-    Load file — opens the .sdlxliff file as an XML document.
-    Auto-detect namespace — extracts the XLIFF namespace URI (e.g. urn:oasis:names:tc:xliff:document:1.2) from the root <xliff> tag, so you don't have to hardcode it.
-    Find segments — finds all <source> tags in the whole file.
-    Extract text — collects plain text from each <source> tag, including text nested in Trados inline tags (e.g. <mrk>).
-    Save to .txt — writes each non-empty text on a new line to sources.txt using utf-8 encoding.
+## Features
+* **XML/XLIFF Parsing:** Automatically extracts text from `<source>` tags while dynamically handling XML namespaces.
+* **Memory Efficient:** Clears processed XML nodes during iteration to optimize RAM usage.
+* **User-Friendly GUI:** Simple desktop interface powered by `tkinter` for seamless file selection and output path configuration.
+* **UTF-8 Support:** Ensures proper encoding preservation for multi-language localization workflows.
 
-## Files
+## Technical Stack
+* **Language:** Python 3.x
+* **GUI Framework:** `tkinter` (built-in)
+* **XML Parser:** `xml.etree.ElementTree` (built-in)
+* **File System Operations:** `pathlib` (built-in)
 
-    Input: program asks user to input filename or absolute path to file
-    Output: sources.txt
-
-## Requirements
-
-    Python 3 only, no external dependencies. Uses the built-in xml.etree.ElementTree module.
-
-## Usage
-
-    python sdlxliff_to_sources_txt.py
-
+## How It Works
+1. Launching the script opens a GUI window prompting the user to select an input file (`.sdlxliff`, `.xliff`, or `.xml`).
+2. The user specifies the destination `.txt` file path.
+3. The application parses the XML tree, dynamically fetches the root namespace, extracts text from all `<source>` elements, and saves them line-by-line.
