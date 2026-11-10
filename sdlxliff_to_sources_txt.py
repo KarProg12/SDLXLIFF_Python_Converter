@@ -22,26 +22,28 @@ class SdlxliffExtractor:
         self.checkbox_status = tk.IntVar(value=0)
         ignore_translated_checkbox = ttk.Checkbutton(
             self.root,
-            text="Turn on/off ignoring Translated status",
+            text="Turn on/off ignoring statuses:\nTranslated, ApprovedTranslation, ApprovedSignOff",
             variable=self.checkbox_status,
             onvalue=1,
             offvalue=0,
-            command=self.check_filter
+            command=self._check_filter,
             )
         ignore_translated_checkbox.pack(pady=10)
 
-    def check_filter(self):
-        self.actual_check_status = self.checkbox_status.get()
+    def _check_filter(self):
+        actual_check_status = self.checkbox_status.get()
 
-        if self.actual_check_status == 1:
-            print(f"Status: {self.actual_check_status}")
+        if actual_check_status == 1:
+            print(f"Status: {actual_check_status}")
         else:
-            print(f"Status: {self.actual_check_status}")
+            print(f"Status: {actual_check_status}")
 
     def ignore_translated_statuses(self, trans_unit, namespaces_map):
+        # If the checkbox is off, do not ignore sources with translated tags
         if self.checkbox_status.get() == 0:
             return False
 
+        # If status of tag translate is equal to 'no' returns true so the program ignores the element
         if trans_unit.get('translate') == 'no':
             return True
 
