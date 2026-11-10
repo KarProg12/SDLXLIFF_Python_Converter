@@ -1,30 +1,79 @@
 import xml.etree.ElementTree as ET
+from hmac import trans_5C
 from pathlib import Path
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog, messagebox
 
 
-class SdlxliffExtractor():
+class SdlxliffExtractor:
     def __init__(self):
         # Initialize paths and variables
         self.file_path = None
         self.output_path = None
         self.namespaces_map = {}
 
+    def custom_filtering(self):
+        filters_label = ttk.Label(
+            self.root,
+            text="Available filters:"
+        )
+        filters_label.pack()
+
+        self.checkbox_status = tk.IntVar(value=0)
+        ignore_translated_checkbox = ttk.Checkbutton(
+            self.root,
+            text="Turn on/off ignoring Translated status",
+            variable=self.checkbox_status,
+            onvalue=1,
+            offvalue=0,
+            command=self.check_filter
+            )
+        ignore_translated_checkbox.pack(pady=10)
+
+    def check_filter(self):
+        self.actual_check_status = self.checkbox_status.get()
+
+        if self.actual_check_status == 1:
+            print(f"Status: {self.actual_check_status}")
+        else:
+            print(f"Status: {self.actual_check_status}")
+
+    def ignore_translated_statuses(self, trans_unit, namespaces_map):
+        if self.checkbox_status.get() == 0:
+            return False
+
+        if trans_unit.get('translate') == 'no':
+            return True
+
+        ignored_statuses = {"Translated", "ApprovedTranslation", "ApprovedSignOff"}
+
+        sdl_segs = trans_unit.findall('.//sdl:seg', namespaces_map)
+
+        for seg in sdl_segs:
+            status = seg.get('conf')
+            is_locked = seg.get('locked') == 'true'
+
+            if is_locked or (status in ignored_statuses):
+                return True
+
+        return False
+
     def choose_file(self):
         """Creates the initial GUI window with a start button."""
         # Set up the main menu window size and title
         self.root = tk.Tk()
         self.root.title("Sdlxliff to txt sources extractor v1.0")
-        self.root.geometry("350x130")
+
+        SdlxliffExtractor.custom_filtering(self)
 
         # Instruction text for supported formats
-        label = tk.Label(self.root, text="Supported file extensions: .xml/.xliff/.sdlxliff\n\n"
+        label = ttk.Label(self.root, text="Supported file extensions: .xml/.xliff/.sdlxliff\n\n"
                                          "Click the button to select a file, you want to extract source texts:")
         label.pack(pady=15)
 
         # Button to open file explorer
-        btn = tk.Button(self.root, text="SELECT FILE", command=self._on_button_click)
+        btn = ttk.Button(self.root, text="SELECT FILE", command=self._on_button_click)
         btn.pack()
 
         # Run Tkinter main loop (stops script execution here until window closes)
@@ -38,7 +87,7 @@ class SdlxliffExtractor():
         # Open dialog to pick the input file
         chosen_file_path = filedialog.askopenfilename(
             title="Select file",
-            filetypes=[("Wszystkie pliki", "*.*"), ("Pliki tekstowe", "*.txt")]
+            filetypes=[("All files", "*.*"), ("Text files", "*.txt")]
         )
 
         # Trigger save dialog only if input file was successfully selected
@@ -47,7 +96,7 @@ class SdlxliffExtractor():
                 title="Where to save the output file?",
                 initialfile="sources.txt",
                 defaultextension=".txt",
-                filetypes=[("Pliki tekstowe", "*.txt"), ("Wszystkie pliki", "*.*")]
+                filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
             )
 
             # Proceed if user confirmed the output path
@@ -78,22 +127,40 @@ class SdlxliffExtractor():
         tree_xml = ET.parse(self.file_path)
         root_xml = tree_xml.getroot()
 
-        # Auto namespace fetching from file root tag
-        namespace = root_xml.tag.split('}')[0].strip('{')
-        namespaces_map = {'xliff': namespace}
+        # POPRAWIONE: Bezpieczne pobieranie przestrzeni nazw XLIFF z roota
+        namespace = ""
+        if '}' in root_xml.tag:
+            namespace = root_xml.tag.split('}')[0].replace('{', '')
+
+        # Słownik przestrzeni nazw (XLIFF oraz metadane SDL dla statusów)
+        namespaces_map = {
+            'xliff': namespace,
+            'sdl': 'http://sdl.com/FileTypes/SdlXliff/1.0'
+        }
 
         # Open chosen destination file with UTF-8 encoding
         with open(self.output_path, 'w', encoding='UTF-8') as txt_file:
-            # Find and process all source elements matching namespace
-            for element in root_xml.findall('.//xliff:source', namespaces_map):
-                text = "".join(element.itertext()).strip()
+            # Iterujemy po jednostkach trans-unit
+            for trans_unit in root_xml.findall('.//xliff:trans-unit', namespaces_map):
 
-                # Write to file only if segment contains actual text
-                if text:
-                    txt_file.write(text + "\n")
+                # Wywołujemy Twoją dedykowaną metodę przekazując jej bieżący element
+                if self.ignore_translated_statuses(trans_unit, namespaces_map):
+                    trans_unit.clear()
+                    continue
 
-                # Free up RAM by clearing the processed XML node
-                element.clear()
+                # Jeśli metoda zwróciła False, normalnie pobieramy tekst ze źródła
+                element = trans_unit.find('xliff:source', namespaces_map)
+                if element is not None:
+                    text = "".join(element.itertext()).strip()
+
+                    # Write to file only if segment contains actual text
+                    if text:
+                        txt_file.write(text + "\n")
+
+                    # Free up RAM by clearing the processed XML node
+                    element.clear()
+
+                trans_unit.clear()
 
         print("\nDone extracting")
         # Visual success pop-up message in GUI
