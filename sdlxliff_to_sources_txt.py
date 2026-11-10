@@ -3,6 +3,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox
+import os
 
 
 class SdlxliffExtractor:
@@ -11,62 +12,41 @@ class SdlxliffExtractor:
         self.file_path = None
         self.output_path = None
         self.namespaces_map = {}
-
-    def custom_filtering(self):
-        filters_label = ttk.Label(
-            self.root,
-            text="Available filters:"
-        )
-        filters_label.pack()
-
-        self.checkbox_status = tk.IntVar(value=0)
-        ignore_translated_checkbox = ttk.Checkbutton(
-            self.root,
-            text="Turn on/off ignoring statuses:\nTranslated, ApprovedTranslation, ApprovedSignOff",
-            variable=self.checkbox_status,
-            onvalue=1,
-            offvalue=0,
-            command=self._check_filter,
-            )
-        ignore_translated_checkbox.pack(pady=10)
-
-    def _check_filter(self):
-        actual_check_status = self.checkbox_status.get()
-
-        if actual_check_status == 1:
-            print(f"Status: {actual_check_status}")
-        else:
-            print(f"Status: {actual_check_status}")
+        self.version = 'v1.1'
 
     def ignore_translated_statuses(self, trans_unit, namespaces_map):
-        # If the checkbox is off, do not ignore sources with translated tags
-        if self.checkbox_status.get() == 0:
-            return False
-
-        # If status of tag translate is equal to 'no' returns true so the program ignores the element
+        # If the status of attribute translate is 'no' ignore the element
         if trans_unit.get('translate') == 'no':
             return True
 
+        # Set of ignored statuses
         ignored_statuses = {"Translated", "ApprovedTranslation", "ApprovedSignOff"}
 
+        # Search whole doc and return all text or data segments marked with tag 'sdl:seg'
+        # './/' means it searches everywhere, in parents and in children etc.
         sdl_segs = trans_unit.findall('.//sdl:seg', namespaces_map)
 
+        # For every single segment in all file segments
         for seg in sdl_segs:
+            # Translation status (e.g. 'Translated', 'ApprovedTranslation' or 'ApprovedSignOff')
             status = seg.get('conf')
+            # Accessibility
             is_locked = seg.get('locked') == 'true'
 
+            # If one of those 2 tags above is return True
+            # This expression is the same as this:
+            # if is_locked or (status in ignored_statuses) == True:
             if is_locked or (status in ignored_statuses):
                 return True
 
+        # If none of those above will be executed, return False
         return False
 
     def choose_file(self):
-        """Creates the initial GUI window with a start button."""
+        """Creates the initial GUI window with a start (SELECT FILE) button."""
         # Set up the main menu window size and title
         self.root = tk.Tk()
-        self.root.title("Sdlxliff to txt sources extractor v1.0")
-
-        SdlxliffExtractor.custom_filtering(self)
+        self.root.title(f"Sdlxliff to txt sources extractor {self.version}")
 
         # Instruction text for supported formats
         label = ttk.Label(self.root, text="Supported file extensions: .xml/.xliff/.sdlxliff\n\n"
@@ -109,6 +89,7 @@ class SdlxliffExtractor:
                 self.file_path = Path(chosen_file_path)
                 self.output_path = Path(chosen_output_path)
 
+                self.root.quit()
                 # Close menu window to pass execution to extraction phase
                 self.root.destroy()
             else:
@@ -128,51 +109,73 @@ class SdlxliffExtractor:
         tree_xml = ET.parse(self.file_path)
         root_xml = tree_xml.getroot()
 
-        # POPRAWIONE: Bezpieczne pobieranie przestrzeni nazw XLIFF z roota
+        # Safe fetching of XLIFF namespaces from root
+        # Gets rid of curly braces around the full root name
         namespace = ""
         if '}' in root_xml.tag:
             namespace = root_xml.tag.split('}')[0].replace('{', '')
 
-        # Słownik przestrzeni nazw (XLIFF oraz metadane SDL dla statusów)
+        # Namespaces dict (XLIFF and SDL's metadata for the statuses)
         namespaces_map = {
             'xliff': namespace,
             'sdl': 'http://sdl.com/FileTypes/SdlXliff/1.0'
         }
 
-        # Open chosen destination file with UTF-8 encoding
-        with open(self.output_path, 'w', encoding='UTF-8') as txt_file:
-            # Iterujemy po jednostkach trans-unit
-            for trans_unit in root_xml.findall('.//xliff:trans-unit', namespaces_map):
+        # Saved segments counter
+        extracted_count = 0
 
-                # Wywołujemy Twoją dedykowaną metodę przekazując jej bieżący element
+        # Open the file on disk immediately to avoid RAM overload
+        with open(self.output_path, 'w', encoding='UTF-8') as txt_file:
+            # All elements tagged 'trans-unit' in list
+            all_trans_units = root_xml.findall('.//xliff:trans-unit', namespaces_map)
+
+            for trans_unit in all_trans_units:
                 if self.ignore_translated_statuses(trans_unit, namespaces_map):
-                    trans_unit.clear()
                     continue
 
-                # Jeśli metoda zwróciła False, normalnie pobieramy tekst ze źródła
                 element = trans_unit.find('xliff:source', namespaces_map)
                 if element is not None:
                     text = "".join(element.itertext()).strip()
 
-                    # Write to file only if segment contains actual text
                     if text:
-                        txt_file.write(text + "\n")
+                        txt_file.write(text + '\n')
+                        extracted_count += 1
 
-                    # Free up RAM by clearing the processed XML node
-                    element.clear()
+        # --- KEY MOMENT (After file closure) ---
+        if extracted_count == 0:
+            # If extracted counter value is 0 remove created file from disk
+            if self.output_path.exists():
+                os.remove(self.output_path)
 
-                trans_unit.clear()
-
-        print("\nDone extracting")
-        # Visual success pop-up message in GUI
-        messagebox.showinfo("Success", f"Done extracting! File sources.txt is ready.\n"
-                                       f"File absolute path: {self.output_path}")
+            print("\nNo segments found to translate.")
+            messagebox.showwarning(
+                "No content to extract",
+                "No segments were found for translation in the selected file!\n"
+                "(All segments are already translated, locked, or the file is empty.)\n\n"
+                "Output file not created."
+            )
+        else:
+            print(f"\nDone extracting. Extracted segments: {extracted_count}")
+            messagebox.showinfo(
+                "Success",
+                f"Done extracting! File sources.txt is ready.\n"
+                f"Extracted segments: {extracted_count}\n"
+                f"File absolute path: {self.output_path}"
+            )
 
 
 if __name__ == '__main__':
     # Initialize the extractor instance
     xliff_extractor = SdlxliffExtractor()
 
-    # Trigger file selection and start extraction if successful
-    if xliff_extractor.choose_file():
+    while True:
+        # Reset the file before choice
+        xliff_extractor.file_path = None
+
+        # If user clicks 'X' button in window or press 'Cancel' quit the loop
+        if not xliff_extractor.choose_file():
+            print("\nProgram closed by user.")
+            break
+
+        # Extraction activation
         xliff_extractor.extract_sources()
