@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-from hmac import trans_5C
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk
