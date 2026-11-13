@@ -13,40 +13,37 @@ class SdlxliffExtractor:
         self.output_path = None
         self.namespaces_map = {}
         self.version = 'v1.1'
+        self.root_xml = None
 
-    def ignore_translated_statuses(self, trans_unit, namespaces_map):
-        # If the status of attribute translate is 'no' ignore the element
-        if trans_unit.get('translate') == 'no':
-            return True
+    def get_ignored_segment_ids(self, trans_unit):
+        """Returns a set of segment IDs (<mid>) that should be skipped."""
+        ignored_statuses = {
+            "Translated",
+            "ApprovedTranslation",
+            "ApprovedSignOff",
+        }
+        ignored_ids = set()
 
-        # Set of ignored statuses
-        ignored_statuses = {"Translated", "ApprovedTranslation", "ApprovedSignOff"}
-
-        # Search whole doc and return all text or data segments marked with tag 'sdl:seg'
-        # './/' means it searches everywhere, in parents and in children etc.
-        sdl_segs = trans_unit.findall('.//sdl:seg', namespaces_map)
-
-        # For every single segment in all file segments
+        sdl_segs = trans_unit.findall(".//sdl:seg-defs/sdl:seg", self.namespaces_map)
+        # Iteration through every single segment in sdl-segs
         for seg in sdl_segs:
-            # Translation status (e.g. 'Translated', 'ApprovedTranslation' or 'ApprovedSignOff')
-            status = seg.get('conf')
-            # Accessibility
-            is_locked = seg.get('locked') == 'true'
+            seg_id = seg.get("id")  # Get value of attribute id
+            status = seg.get("conf")  # Get translation status
+            is_locked = seg.get("locked") == "true"  # If locked has value "true", return True, else False
 
-            # If one of those 2 tags above is return True
-            # This expression is the same as this:
-            # if is_locked or (status in ignored_statuses) == True:
+            # If is_locked (like above) is true or fetched status is in ignored_statuses set
             if is_locked or (status in ignored_statuses):
-                return True
+                ignored_ids.add(seg_id)  # Add ignored segment id to the set of ignored_ids
+                # (it's a set because set automatically removes duplicates (what's impossible with these ids because they're already unique. It's just to make sure))
 
-        # If none of those above will be executed, return False
-        return False
+        # Return set of ignored IDs
+        return ignored_ids
 
     def choose_file(self):
         """Creates the initial GUI window with a start (SELECT FILE) button."""
         # Set up the main menu window size and title
         self.root = tk.Tk()
-        self.root.title(f"Sdlxliff to txt sources extractor {self.version}")
+        self.root.title(f"Sdlxliff Extractor {self.version}")
 
         # Instruction text for supported formats
         label = ttk.Label(self.root, text="Supported file extensions: .xml/.xliff/.sdlxliff\n\n"
@@ -75,7 +72,7 @@ class SdlxliffExtractor:
         if chosen_file_path:
             chosen_output_path = filedialog.asksaveasfilename(
                 title="Where to save the output file?",
-                initialfile="sources.txt",
+                initialfile="source.txt",
                 defaultextension=".txt",
                 filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
             )
@@ -99,25 +96,15 @@ class SdlxliffExtractor:
             messagebox.showwarning("Cancelled", "No file selected.")
 
     def extract_sources(self):
-        """All text tagged `source` to sources.txt extracting logic"""
+        """Stream-based extraction of `seg-source` segments to sources.txt to keep RAM usage minimal."""
         # Safety check: ensure file exists
         if not self.file_path or not self.file_path.exists():
             print("\nNo valid file selected")
             return
 
-        # Parse XML structure
-        tree_xml = ET.parse(self.file_path)
-        root_xml = tree_xml.getroot()
-
-        # Safe fetching of XLIFF namespaces from root
-        # Gets rid of curly braces around the full root name
-        namespace = ""
-        if '}' in root_xml.tag:
-            namespace = root_xml.tag.split('}')[0].replace('{', '')
-
-        # Namespaces dict (XLIFF and SDL's metadata for the statuses)
-        namespaces_map = {
-            'xliff': namespace,
+        # Default namespaces map (XLIFF namespace will be updated dynamically from the root tag)
+        self.namespaces_map = {
+            'xliff': 'urn:oasis:names:tc:xliff:document:1.2',
             'sdl': 'http://sdl.com/FileTypes/SdlXliff/1.0'
         }
 
@@ -126,24 +113,50 @@ class SdlxliffExtractor:
 
         # Open the file on disk immediately to avoid RAM overload
         with open(self.output_path, 'w', encoding='UTF-8') as txt_file:
-            # All elements tagged 'trans-unit' in list
-            all_trans_units = root_xml.findall('.//xliff:trans-unit', namespaces_map)
+            # Stream-parse the XML file without loading the entire tree into RAM
+            context = ET.iterparse(self.file_path, events=('start', 'end'))
 
-            for trans_unit in all_trans_units:
-                if self.ignore_translated_statuses(trans_unit, namespaces_map):
-                    continue
+            for event, elem in context:
+                # Fetch the exact XLIFF namespace from the opening <xliff> tag
+                if event == 'start' and elem.tag.endswith('xliff'):
+                    if '}' in elem.tag:
+                        self.namespaces_map['xliff'] = elem.tag.split('}')[0].replace('{', '')
 
-                element = trans_unit.find('xliff:source', namespaces_map)
-                if element is not None:
-                    text = "".join(element.itertext()).strip()
+                # Process each <trans-unit> block as soon as its closing tag </trans-unit> is reached
+                elif event == 'end' and elem.tag.endswith('}trans-unit'):
+                    if elem.get('translate') != 'no':
+                        # Fetching segment IDs (<mid>) which should be ignored in this trans-unit
+                        ignored_ids = self.get_ignored_segment_ids(elem)
 
-                    if text:
-                        txt_file.write(text + '\n')
-                        extracted_count += 1
+                        seg_source = elem.find('xliff:seg-source', self.namespaces_map)
+                        # If seg-source exists
+                        if seg_source is not None:
+                            # Iterate through every single segment <mrk mtype="seg">
+                            for mrk in seg_source.findall('.//xliff:mrk[@mtype="seg"]', self.namespaces_map):
+                                mid = mrk.get('mid')
 
-        # --- KEY MOMENT (After file closure) ---
+                                # Skip only this exact segment if its ID is on the excluded list
+                                if mid in ignored_ids:
+                                    continue
+
+                                text = ''.join(mrk.itertext()).strip().replace('\n', ' ').replace('\r', '')
+                                if text:
+                                    txt_file.write(text + '\n')
+                                    extracted_count += 1
+                        else:
+                            # Protection for files that don't have <seg-source> yet, only <source>
+                            source = elem.find('xliff:source', self.namespaces_map)
+                            if source is not None:
+                                text = ''.join(source.itertext()).strip().replace('\n', ' ').replace('\r', '')
+                                if text:
+                                    txt_file.write(text + '\n')
+                                    extracted_count += 1
+
+                    # Immediately free processed <trans-unit> from RAM
+                    elem.clear()
+
+        # --- Post-extraction checks (after file closure) ---
         if extracted_count == 0:
-            # If extracted counter value is 0 remove created file from disk
             if self.output_path.exists():
                 os.remove(self.output_path)
 
@@ -158,11 +171,14 @@ class SdlxliffExtractor:
             print(f"\nDone extracting. Extracted segments: {extracted_count}")
             messagebox.showinfo(
                 "Success",
-                f"Done extracting! File sources.txt is ready.\n"
+                f"Done extracting! File source.txt is ready.\n"
                 f"Extracted segments: {extracted_count}\n"
                 f"File absolute path: {self.output_path}"
             )
 
+    def import_translated_sources(self):
+        """Method that handles importing translated sources to targets by trans-unit mids (<mid>)"""
+        pass
 
 if __name__ == '__main__':
     # Initialize the extractor instance

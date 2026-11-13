@@ -4,6 +4,8 @@ from pathlib import Path
 file_path = input("Enter the file name or absolute path if the file is not in the same directory with this program:\n >> ")
 file_path = Path(file_path)
 
+usr_choice = input("Enter where u want to search: xliff, sdl\n >> ")
+
 try:
     while True:
 
@@ -11,13 +13,13 @@ try:
         root = tree.getroot()
 
         namespace = root.tag.split('}')[0].strip('{')
-        space_map = {"xliff": namespace}
+        space_map = {"xliff": namespace, "sdl": 'http://sdl.com/FileTypes/SdlXliff/1.0'}
 
         path_input = input(
             "\n! ['.//' means 'search in all children (and also in children of those children) of the parent'] !\n"
             f"Search in '{file_path}' file structure:\n"
-            f" >> .//xliff:")
-        path = ".//xliff:" + path_input
+            f" >> .//{usr_choice}:")
+        path = usr_choice + path_input
         file = root.find(path, space_map)
         print()
         print(file)
