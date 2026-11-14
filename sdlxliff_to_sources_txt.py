@@ -45,14 +45,44 @@ class SdlxliffExtractor:
         self.root = tk.Tk()
         self.root.title(f"Sdlxliff Extractor {self.version}")
 
+        window_width = 400
+        window_height = 300
+
+        # Get screen parameters
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        # Set window x and y positions so the extractor window will show in the middle of the screen
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
         # Instruction text for supported formats
-        label = ttk.Label(self.root, text="Supported file extensions: .xml/.xliff/.sdlxliff\n\n"
-                                         "Click the button to select a file, you want to extract source texts:")
-        label.pack(pady=15)
+        label = ttk.Label(
+            self.root, text="Supported file extensions: .xml/.xliff/.sdlxliff\n\n"
+                            "Click the button to select a file, you want to extract source texts:")
+        label.pack(pady=20)
 
         # Button to open file explorer
         btn = ttk.Button(self.root, text="SELECT FILE", command=self._on_button_click)
         btn.pack()
+
+        options_label = ttk.Label(
+            self.root,
+            text="\nAvailable program options:\n"
+        )
+        options_label.pack()
+
+        self.check_status = tk.IntVar(value=0)
+        import_trans_check = ttk.Checkbutton(
+            self.root,
+            text="Import translated sources from selected file to targets",
+            onvalue=1,
+            offvalue=0,
+            variable=self.check_status
+        )
+        import_trans_check.pack()
 
         # Run Tkinter main loop (stops script execution here until window closes)
         self.root.mainloop()
@@ -65,7 +95,7 @@ class SdlxliffExtractor:
         # Open dialog to pick the input file
         chosen_file_path = filedialog.askopenfilename(
             title="Select file",
-            filetypes=[("All files", "*.*"), ("Text files", "*.txt")]
+            filetypes=[("SDLXLIFF / XLIFF files", "*.sdlxliff *.xliff *.xml"), ("All files", "*.*")]
         )
 
         # Trigger save dialog only if input file was successfully selected
@@ -95,7 +125,7 @@ class SdlxliffExtractor:
             print("File choose cancelled")
             messagebox.showwarning("Cancelled", "No file selected.")
 
-    def extract_sources(self):
+    def extract_sources_to_txt(self):
         """Stream-based extraction of `seg-source` segments to sources.txt to keep RAM usage minimal."""
         # Safety check: ensure file exists
         if not self.file_path or not self.file_path.exists():
@@ -176,7 +206,7 @@ class SdlxliffExtractor:
                 f"File absolute path: {self.output_path}"
             )
 
-    def import_translated_sources(self):
+    def import_to_targets(self):
         """Method that handles importing translated sources to targets by trans-unit mids (<mid>)"""
         pass
 
@@ -194,4 +224,4 @@ if __name__ == '__main__':
             break
 
         # Extraction activation
-        xliff_extractor.extract_sources()
+        xliff_extractor.extract_sources_to_txt()
