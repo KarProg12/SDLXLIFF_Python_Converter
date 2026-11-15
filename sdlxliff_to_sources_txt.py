@@ -65,8 +65,14 @@ class SdlxliffExtractor:
         label.pack(pady=20)
 
         # Button to open file explorer
-        btn = ttk.Button(self.root, text="SELECT FILE", command=self._on_button_click)
-        btn.pack()
+        file_explorer_btn = ttk.Button(
+            self.root,
+            text="SELECT FILE",
+            command=self._on_button_click,
+            width=25,
+            takefocus=True
+        )
+        file_explorer_btn.pack()
 
         options_label = ttk.Label(
             self.root,
