@@ -1,160 +1,148 @@
-from converter import *
+# transmAIte_prosty.py - WERSJA PROSTA (okienko)
+# Co robi ten plik? Pokazuje okienko z przyciskami.
+# Kazdy przycisk wywoluje jedna funkcje z pliku converter_prosty.py.
+# Uzywamy tylko: tkinter, funkcje, if, try/except.
+# NIE ma tu watkow (threading) - program na chwile "zamrozi" okienko
+# podczas pracy, ale kod jest o wiele prostszy do przeczytania.
+
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-import threading
-# [STRIPPED 75 bytes]
-# Minimal GUI: file pickers, two actions, status line. No extra features.
-# [STRIPPED 75 bytes]
 
-root_window = tk.Tk()
-root_window.title("SDLXLIFF <-> JSON")
-root_window.geometry("640x545")
-
-path_variables = {
-    key: tk.StringVar()
-    for key in ["export_source_path", "export_output_folder", "export_termbase_path",
-                "import_source_path", "import_json_path", "import_output_path",
-                "txt_json_path", "txt_output_folder_path", "txt_translate_path"]
-}
+# Importujemy funkcje z drugiego pliku
+from converter import eksportuj_do_json, importuj_do_sdlxliff
+from converter import eksportuj_json_do_txt, importuj_txt_do_json
+import json
 
 
-def pick_path(variable, dialog_kind="file", file_types=None):
-    # Opens a file / folder / save dialog and stores the chosen path in the field.
-    chosen_path = {
-        "file": lambda: filedialog.askopenfilename(filetypes=file_types or [("All files", "*.*")]),
-        "dir": filedialog.askdirectory,
-        "save": lambda: filedialog.asksaveasfilename(
-            defaultextension=".sdlxliff",
-            filetypes=[("SDLXLIFF", "*.sdlxliff"), ("All files", "*.*")]),
-    }[dialog_kind]()
-    if chosen_path:
-        variable.set(chosen_path)
+# --- 1. Okno glowne ---
+okno = tk.Tk()
+okno.title("SDLXLIFF <-> JSON")
+okno.geometry("640x545")
+
+# --- 2. Pudeleczka na sciezki ---
+# Kazde pudeleczko przechowuje jedna sciezke wybrana przez uzytkownika.
+sciezki = {}
+for nazwa in ["eksport_plik", "eksport_folder", "eksport_baza",
+              "import_plik", "import_json", "import_zapisz",
+              "txt_json", "txt_folder", "txt_do_importu"]:
+    sciezki[nazwa] = tk.StringVar()
 
 
-def add_row(parent_box, row_number, label_text, variable, browse_command):
-    # One GUI row: label on the left, editable path in the middle, Browse button on the right.
-    ttk.Label(parent_box, text=label_text).grid(row=row_number, column=0, sticky="w", pady=2)
-    ttk.Entry(parent_box, textvariable=variable).grid(row=row_number, column=1, sticky="ew", padx=6, pady=2)
-    ttk.Button(parent_box, text="Browse…", command=browse_command).grid(row=row_number, column=2, pady=2)
-    parent_box.columnconfigure(1, weight=1)
+def wybierz_sciezke(pudeleczko, jaki_typ):
+    """Otwiera okienko wyboru pliku/folderu i zapisuje wybor do pudeleczka."""
+    wybrana = ""
+    if jaki_typ == "plik":
+        wybrana = filedialog.askopenfilename()
+    elif jaki_typ == "folder":
+        wybrana = filedialog.askdirectory()
+    elif jaki_typ == "zapisz":
+        wybrana = filedialog.asksaveasfilename(defaultextension=".sdlxliff")
+
+    if wybrana:
+        pudeleczko.set(wybrana)
 
 
-def run_in_thread(function_to_run, success_message):
-    # Runs work in a background thread, so the GUI never freezes during export/import.
-    def thread_job():
-        try:
-            returned_message = function_to_run()
-            final_message = returned_message if isinstance(returned_message, str) else success_message
-            root_window.after(0, lambda: (status_text.set(final_message),
-                                           messagebox.showinfo("Done", final_message)))
-        except Exception as error:
-            root_window.after(0, lambda: (status_text.set(f"ERROR: {error}"),
-                                           messagebox.showerror("Error", str(error))))
-    threading.Thread(target=thread_job, daemon=True).start()
+def dodaj_rzad(pudelko, numer_rzedu, napis, pudeleczko, jaki_typ):
+    """Jeden rzad w okienku: napis + pole na sciezke + przycisk Browse."""
+    ttk.Label(pudelko, text=napis).grid(row=numer_rzedu, column=0, sticky="w", pady=2)
+    ttk.Entry(pudelko, textvariable=pudeleczko).grid(row=numer_rzedu, column=1, sticky="ew", padx=6, pady=2)
+    ttk.Button(pudelko, text="Browse...", command=lambda: wybierz_sciezke(pudeleczko, jaki_typ)).grid(row=numer_rzedu, column=2, pady=2)
+    pudelko.columnconfigure(1, weight=1)
 
 
-def do_export():
-    # Export button: checks required fields, loads the termbase if one was chosen, starts export.
-    if not path_variables["export_source_path"].get() or not path_variables["export_output_folder"].get():
-        return messagebox.showwarning("Missing data", "Select SDLXLIFF file and output folder.")
-    def export_job():
-        termbase_data = None
-        if path_variables["export_termbase_path"].get():
-            with open(path_variables["export_termbase_path"].get(), encoding="utf-8") as termbase_file:
-                termbase_data = json.load(termbase_file)
-        exported_count = export_sdlxliff_to_json(path_variables["export_source_path"].get(),
-                                                 path_variables["export_output_folder"].get(), termbase_data)
-        return f"Export finished. Exported {exported_count} segment(s)."
-    run_in_thread(export_job, "Export finished.")
+def pokaz_blad_lub_wykonaj(co_robimy):
+    """Wspolna obsluga bledow: jesli cos sie wywali, pokaz okienko z bledem."""
+    try:
+        wiadomosc = co_robimy()
+        status.set(wiadomosc)
+        messagebox.showinfo("Gotowe", wiadomosc)
+    except Exception as blad:
+        status.set("BLAD: " + str(blad))
+        messagebox.showerror("Blad", str(blad))
 
 
-def do_import():
-    # Import button: checks all three fields, starts import.
-    if not all(path_variables[key].get() for key in ["import_source_path", "import_json_path", "import_output_path"]):
-        return messagebox.showwarning("Missing data", "Select all 3 paths for import.")
-    def import_job():
-        inserted_count, skipped_count = import_to_sdlxliff(path_variables["import_source_path"].get(),
-                                                           path_variables["import_json_path"].get(),
-                                                           path_variables["import_output_path"].get())
-        return f"Import finished. Inserted {inserted_count} segment(s), skipped {skipped_count}."
-    run_in_thread(import_job, "Import finished.")
+# --- 3. Co robi kazdy przycisk ---
+
+def kliknij_eksport():
+    if not sciezki["eksport_plik"].get() or not sciezki["eksport_folder"].get():
+        messagebox.showwarning("Brakuje danych", "Wybierz plik SDLXLIFF i folder wyjsciowy.")
+        return
+
+    def zadanie():
+        baza = None
+        if sciezki["eksport_baza"].get():
+            with open(sciezki["eksport_baza"].get(), encoding="utf-8") as plik:
+                baza = json.load(plik)
+        # UWAGA: prosta wersja nie uzywa bazy terminow (to byl dodatek).
+        # Jesli chcesz ja wrocic, dopisz ja w converter_prosty.py.
+        liczba = eksportuj_do_json(sciezki["eksport_plik"].get(), sciezki["eksport_folder"].get())
+        return "Eksport gotowy. Wyeksportowano " + str(liczba) + " segmentow."
+
+    pokaz_blad_lub_wykonaj(zadanie)
 
 
-def do_txt_export():
-    # JSON -> 2 TXT files button: checks JSON + output folder, starts TXT export.
-    if not path_variables["txt_json_path"].get() or not path_variables["txt_output_folder_path"].get():
-        return messagebox.showwarning("Missing data", "Select export.json and output folder for TXT.")
-    def txt_export_job():
-        segment_count = export_json_to_txt_files(path_variables["txt_json_path"].get(),
-                                                 path_variables["txt_output_folder_path"].get())
-        return f"TXT export finished. Exported {segment_count} segment(s) to 2 TXT files."
-    run_in_thread(txt_export_job, "TXT export finished.")
+def kliknij_import():
+    if not sciezki["import_plik"].get() or not sciezki["import_json"].get() or not sciezki["import_zapisz"].get():
+        messagebox.showwarning("Brakuje danych", "Wybierz wszystkie 3 sciezki do importu.")
+        return
+
+    def zadanie():
+        liczba = importuj_do_sdlxliff(sciezki["import_plik"].get(), sciezki["import_json"].get(), sciezki["import_zapisz"].get())
+        return "Import gotowy. Wstawiono " + str(liczba) + " segmentow."
+
+    pokaz_blad_lub_wykonaj(zadanie)
 
 
-def do_txt_import():
-    # TXT -> JSON button: checks TXT file + JSON to update, starts TXT import.
-    if not path_variables["txt_translate_path"].get() or not path_variables["txt_json_path"].get():
-        return messagebox.showwarning("Missing data", "Select the edited TXT file and the export.json to update.")
-    def txt_import_job():
-        updated_count = import_txt_files_to_json(path_variables["txt_translate_path"].get(),
-                                                 path_variables["txt_json_path"].get())
-        return f"TXT -> JSON finished. Updated {updated_count} segment(s)."
-    run_in_thread(txt_import_job, "TXT -> JSON finished.")
+def kliknij_txt_eksport():
+    if not sciezki["txt_json"].get() or not sciezki["txt_folder"].get():
+        messagebox.showwarning("Brakuje danych", "Wybierz export.json i folder wyjsciowy.")
+        return
+
+    def zadanie():
+        liczba = eksportuj_json_do_txt(sciezki["txt_json"].get(), sciezki["txt_folder"].get())
+        return "TXT gotowe. Wyeksportowano " + str(liczba) + " segmentow."
+
+    pokaz_blad_lub_wykonaj(zadanie)
 
 
-# Export section: SDLXLIFF file, output folder, optional termbase, Export button.
-export_box = ttk.LabelFrame(root_window, text=" Export SDLXLIFF -> JSON ", padding=8)
-export_box.pack(fill="x", padx=10, pady=(10, 5))
+def kliknij_txt_import():
+    if not sciezki["txt_do_importu"].get() or not sciezki["txt_json"].get():
+        messagebox.showwarning("Brakuje danych", "Wybierz plik TXT i export.json do aktualizacji.")
+        return
 
-add_row(export_box, 0, "SDLXLIFF file:", path_variables["export_source_path"],
-        lambda: pick_path(path_variables["export_source_path"], "file",
-                          [("SDLXLIFF", "*.sdlxliff"), ("All files", "*.*")]))
+    def zadanie():
+        liczba = importuj_txt_do_json(sciezki["txt_do_importu"].get(), sciezki["txt_json"].get())
+        return "TXT -> JSON gotowe. Zaktualizowano " + str(liczba) + " segmentow."
 
-add_row(export_box, 1, "Output folder:", path_variables["export_output_folder"],
-        lambda: pick_path(path_variables["export_output_folder"], "dir"))
+    pokaz_blad_lub_wykonaj(zadanie)
 
-add_row(export_box, 2, "Termbase (optional):", path_variables["export_termbase_path"],
-        lambda: pick_path(path_variables["export_termbase_path"], "file",
-                          [("JSON", "*.json"), ("All files", "*.*")]))
 
-ttk.Button(export_box, text="Export to JSON", command=do_export).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+# --- 4. Budujemy okienko: 3 pudelka ---
 
-# TXT section: JSON <-> 2 TXT files.
-txt_box = ttk.LabelFrame(root_window, text=" TXT: JSON <-> 2 TXT files ", padding=8)
-txt_box.pack(fill="x", padx=10, pady=5)
+pudelko_eksport = ttk.LabelFrame(okno, text=" Eksport SDLXLIFF -> JSON ", padding=8)
+pudelko_eksport.pack(fill="x", padx=10, pady=(10, 5))
+dodaj_rzad(pudelko_eksport, 0, "Plik SDLXLIFF:", sciezki["eksport_plik"], "plik")
+dodaj_rzad(pudelko_eksport, 1, "Folder wyjsciowy:", sciezki["eksport_folder"], "folder")
+dodaj_rzad(pudelko_eksport, 2, "Baza terminow (opcjonalnie):", sciezki["eksport_baza"], "plik")
+ttk.Button(pudelko_eksport, text="Eksportuj do JSON", command=kliknij_eksport).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(6, 0))
 
-add_row(txt_box, 0, "export.json:", path_variables["txt_json_path"],
-        lambda: pick_path(path_variables["txt_json_path"], "file", [("JSON", "*.json"), ("All files", "*.*")]))
+pudelko_txt = ttk.LabelFrame(okno, text=" TXT: JSON <-> 2 pliki TXT ", padding=8)
+pudelko_txt.pack(fill="x", padx=10, pady=5)
+dodaj_rzad(pudelko_txt, 0, "export.json:", sciezki["txt_json"], "plik")
+dodaj_rzad(pudelko_txt, 1, "Folder na TXT:", sciezki["txt_folder"], "folder")
+dodaj_rzad(pudelko_txt, 2, "TXT do importu:", sciezki["txt_do_importu"], "plik")
+ttk.Button(pudelko_txt, text="JSON -> 2 pliki TXT", command=kliknij_txt_eksport).grid(row=3, column=0, columnspan=2, sticky="ew", pady=(6, 0))
+ttk.Button(pudelko_txt, text="TXT -> JSON", command=kliknij_txt_import).grid(row=3, column=2, sticky="ew", pady=(6, 0))
 
-add_row(txt_box, 1, "TXT output folder:", path_variables["txt_output_folder_path"],
-        lambda: pick_path(path_variables["txt_output_folder_path"], "dir"))
+pudelko_import = ttk.LabelFrame(okno, text=" Import JSON -> SDLXLIFF ", padding=8)
+pudelko_import.pack(fill="x", padx=10, pady=5)
+dodaj_rzad(pudelko_import, 0, "Oryginalny SDLXLIFF:", sciezki["import_plik"], "plik")
+dodaj_rzad(pudelko_import, 1, "Przetlumaczony JSON:", sciezki["import_json"], "plik")
+dodaj_rzad(pudelko_import, 2, "Zapisz jako:", sciezki["import_zapisz"], "zapisz")
+ttk.Button(pudelko_import, text="Importuj do SDLXLIFF", command=kliknij_import).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(6, 0))
 
-add_row(txt_box, 2, "TXT to import: \n(default filename is export_translate)", path_variables["txt_translate_path"],
-        lambda: pick_path(path_variables["txt_translate_path"], "file", [("Text", "*.txt"), ("All files", "*.*")]))
+# --- 5. Linia statusu na dole + start ---
+status = tk.StringVar(value="Gotowy.")
+ttk.Label(okno, textvariable=status).pack(anchor="w", padx=12, pady=8)
 
-ttk.Button(txt_box, text="JSON -> 2 TXT files", command=do_txt_export).grid(row=3, column=0, columnspan=2, sticky="ew", pady=(6, 0))
-ttk.Button(txt_box, text="TXT -> JSON", command=do_txt_import).grid(row=3, column=2, sticky="ew", pady=(6, 0))
-
-# Import section: original SDLXLIFF, translated JSON, save-as path, Import button.
-import_box = ttk.LabelFrame(root_window, text=" Import JSON -> SDLXLIFF ", padding=8)
-import_box.pack(fill="x", padx=10, pady=5)
-
-add_row(import_box, 0, "Original SDLXLIFF:", path_variables["import_source_path"],
-        lambda: pick_path(path_variables["import_source_path"], "file",
-                          [("SDLXLIFF", "*.sdlxliff"), ("All files", "*.*")]))
-
-add_row(import_box, 1, "Translated JSON:", path_variables["import_json_path"],
-        lambda: pick_path(path_variables["import_json_path"], "file",
-                          [("JSON", "*.json"), ("All files", "*.*")]))
-
-add_row(import_box, 2, "Save as:", path_variables["import_output_path"],
-        lambda: pick_path(path_variables["import_output_path"], "save"))
-
-ttk.Button(import_box, text="Import to SDLXLIFF", command=do_import).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(6, 0))
-
-# Status line at the bottom of the window.
-status_text = tk.StringVar(value="Ready.")
-
-ttk.Label(root_window, textvariable=status_text).pack(anchor="w", padx=12, pady=8)
-
-root_window.mainloop()
+okno.mainloop()
