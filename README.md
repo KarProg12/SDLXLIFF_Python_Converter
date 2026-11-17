@@ -26,6 +26,5 @@ SDLXLIFF_Python_Converter/
 │
 ├── converter.py
 ├── transmAIte.py
-├── xliff_dev_search_minitool.py
 ├── README.md
 └── ...
