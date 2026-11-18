@@ -35,12 +35,21 @@ def tekst_z_elementu(element):
 
     # Dla kazdego tagu w srodku...
     for dziecko in element:
-        # Nazwa tagu bez dlugiego adresu, np. "{...}g" -> "g"
-        nazwa = dziecko.tag.split("}", 1)[-1]
+        if dziecko.tag.startswith("{http://sdl.com/FileTypes/SdlXliff/1.0}"):
+            nazwa = "sdl:" + dziecko.tag.split("}", 1)[-1]
+        elif dziecko.tag.startswith("{"):
+            nazwa = dziecko.tag.split("}", 1)[-1]
+        else:
+            nazwa = dziecko.tag
 
         # Atrybuty tagu, np. id="1"
         atrybuty = ""
         for nazwa_atr, wartosc in dziecko.attrib.items():
+            if nazwa_atr.startswith("{http://www.w3.org/XML/1998/namespace}"):
+                nazwa_atr = "xml:" + nazwa_atr.split("}", 1)[-1]
+            elif nazwa_atr.startswith("{"):
+                nazwa_atr = nazwa_atr.split("}", 1)[-1]
+
             bezpieczna = wartosc.replace("&", "&amp;").replace('"', "&quot;")
             atrybuty = atrybuty + " " + nazwa_atr + '="' + bezpieczna + '"'
 
