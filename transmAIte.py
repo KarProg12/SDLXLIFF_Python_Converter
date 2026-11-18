@@ -7,7 +7,7 @@ from converter import eksportuj_do_json, importuj_do_sdlxliff, eksportuj_json_do
 
 # --- 1. Okno glowne ---
 okno = tk.Tk()
-okno.title("SDLXLIFF <-> JSON")
+okno.title("TransmAIte (SDLXLIFF <- 2x TXT -> JSON)")
 okno.geometry("640x545")
 
 # --- 2. Pudeleczka na sciezki ---

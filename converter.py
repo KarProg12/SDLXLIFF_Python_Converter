@@ -293,14 +293,21 @@ def importuj_txt_do_json(plik_txt, plik_json):
                   f"segmenty JSON: {len(dane['segments'])}")
             return 0
 
-    zaaktualizowano = 0
+    zmienione_przez_uzytkownika = 0
+    segmenty_bez_zmian = 0
+    segmenty_puste = 0
     for segment, tekst in zip(dane["segments"], linie):
-        if tekst.strip():
+        stary = segment.get("target") or ""
+        if not tekst.strip():
+            segmenty_puste += 1
+        elif stary != tekst:
             segment["target"] = tekst
-            zaaktualizowano = zaaktualizowano + 1
+            zmienione_przez_uzytkownika += 1
+        else:
+            segmenty_bez_zmian += 1
 
     with open(plik_json, "w", encoding="utf-8") as plik:
         json.dump(dane, plik, ensure_ascii=False, indent=2)
 
-    print(f"TXT -> JSON: zaaktualizowano {zaaktualizowano} segmentów.")
-    return zaaktualizowano
+    print(f"TXT -> JSON: segmenty zmienione przez użytkownika: {zmienione_przez_uzytkownika}, segmenty bez zmian {segmenty_bez_zmian}, segmenty puste {segmenty_puste} / razem {len(dane['segments'])}")
+    return zmienione_przez_uzytkownika
