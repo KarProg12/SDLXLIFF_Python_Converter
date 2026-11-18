@@ -33,6 +33,6 @@ The original SDLXLIFF file is never modified. The tool exports segments to JSON,
 ### 1. Export SDLXLIFF → JSON
 
 ```python
-from converter_prosty import eksportuj_do_json
+from converter import eksportuj_do_json
 
 eksportuj_do_json("file.sdlxliff", "output")
