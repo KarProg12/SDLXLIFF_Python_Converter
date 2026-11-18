@@ -42,7 +42,8 @@ def tekst_z_elementu(element):
         # Atrybuty tagu, np. id="1"
         atrybuty = ""
         for nazwa_atr, wartosc in dziecko.attrib.items():
-            atrybuty = atrybuty + " " + nazwa_atr + '="' + wartosc + '"'
+            bezpieczna = wartosc.replace("&", "&amp;").replace('"', "&quot;")
+            atrybuty = atrybuty + " " + nazwa_atr + '="' + bezpieczna + '"'
 
         # Tekst w srodku tagu (funkcja wywoluje sama siebie - rekurencja)
         srodek = tekst_z_elementu(dziecko)
@@ -97,6 +98,7 @@ def eksportuj_do_json(plik_sdlxliff, folder_wyjsciowy):
                 if znacznik.get("mtype") == "seg":
                     stare_tlumaczenia[znacznik.get("mid")] = tekst_z_elementu(znacznik)
 
+
         for znacznik in zrodlo.findall(".//xliff:mrk", NAMESPACES):
             if znacznik.get("mtype") != "seg":
                 continue
@@ -131,6 +133,16 @@ def eksportuj_do_json(plik_sdlxliff, folder_wyjsciowy):
 
 def importuj_do_sdlxliff(plik_sdlxliff, plik_json, plik_wyjsciowy):
     """Wstawia tlumaczenia z JSON z powrotem do pliku .sdlxliff."""
+    import shutil
+    import os
+
+    if plik_wyjsciowy == plik_sdlxliff:
+        print("NIE ZAPISANO: plik wyjściowy to ten sam plik co wejściowy!")
+        return 0
+
+    if not os.path.exists(plik_sdlxliff + ".bak"):
+        shutil.copy(plik_sdlxliff, plik_sdlxliff + ".bak")
+
     with open(plik_json, encoding="utf-8") as plik:
         dane = json.load(plik)
 
@@ -146,13 +158,16 @@ def importuj_do_sdlxliff(plik_sdlxliff, plik_json, plik_wyjsciowy):
     korzen = drzewo.getroot()
 
     wstawiono = 0
+    pominieto = 0
 
     for jednostka in korzen.findall(".//xliff:trans-unit", NAMESPACES):
         jednostka_id = str(jednostka.get("id"))
         cel = jednostka.find("xliff:target", NAMESPACES)
         definicje = jednostka.find("sdl:seg-defs", NAMESPACES)
+        zrodlo = jednostka.find("xliff:seg-source", NAMESPACES)
 
         if cel is None or definicje is None:
+            pominieto += 1
             continue
 
         # Znajdz istniejace znaczniki <mrk> w celu: id -> element
@@ -160,6 +175,12 @@ def importuj_do_sdlxliff(plik_sdlxliff, plik_json, plik_wyjsciowy):
         for znacznik in cel.findall(".//xliff:mrk", NAMESPACES):
             if znacznik.get("mtype") == "seg":
                 znaczniki[znacznik.get("mid")] = znacznik
+
+        zrodla = {}
+        if zrodlo is not None:
+            for znacznik in zrodlo.findall(".//xliff:mrk", NAMESPACES):
+                if znacznik.get("mtype") == "seg":
+                    zrodla[znacznik.get("mid")] = tekst_z_elementu(znacznik)
 
         for definicja in definicje.findall("sdl:seg", NAMESPACES):
             seg_id = definicja.get("id")
@@ -178,18 +199,27 @@ def importuj_do_sdlxliff(plik_sdlxliff, plik_json, plik_wyjsciowy):
             znacznik = znaczniki[seg_id]
             nowy_tekst = tlumaczenia[klucz]
 
+            zrodlo_tekst = zrodla.get(seg_id, "")
+            if zrodlo_tekst.count("<") != nowy_tekst.count("<"):
+                print(f"UWAGA: inna liczba tagów w segmencie {seg_id}")
+                print(f"Źródło: {zrodlo_tekst}")
+                print(f"Tłumaczenie: {nowy_tekst}")
+
             # Czyscimy stary tekst, ale zachowujemy atrybuty
             stare_atrybuty = dict(znacznik.attrib)
+            stary_tail = znacznik.tail
             znacznik.clear()
+
             for nazwa, wartosc in stare_atrybuty.items():
                 znacznik.set(nazwa, wartosc)
             znacznik.set("mtype", "seg")
             znacznik.set("mid", seg_id)
+            znacznik.tail = stary_tail
 
             # Probujemy wstawic tekst z tagami jako XML.
             # Jesli sie nie uda (np. zwykly znak &), wstawiamy jako zwykly tekst.
             try:
-                opakowanie = '<wrap xmlns="urn:oasis:names:tc:xliff:document:1.2">' + nowy_tekst + "</wrap>"
+                opakowanie = '<wrap xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:sdl="http://sdl.com/FileTypes/SdlXliff/1.0">' + nowy_tekst + "</wrap>"
                 fragment = ET.fromstring(opakowanie)
                 daj_przestrzen_nazw(fragment)
                 znacznik.text = fragment.text
@@ -199,14 +229,17 @@ def importuj_do_sdlxliff(plik_sdlxliff, plik_json, plik_wyjsciowy):
                 znacznik.text = nowy_tekst
 
             definicja.set("conf", "Draft")
-            wstawiono = wstawiono + 1
+            wstawiono += 1
 
     # Rejestrujemy przestrzenie nazw, zeby plik wygladal ladnie
     ET.register_namespace("sdl", "http://sdl.com/FileTypes/SdlXliff/1.0")
     ET.register_namespace("", "urn:oasis:names:tc:xliff:document:1.2")
     drzewo.write(plik_wyjsciowy, encoding="utf-8", xml_declaration=True)
 
-    print("Import gotowy. Wstawiono:", wstawiono)
+    print(f"{wstawiono=}")
+    print(f"{pominieto=}")
+    print(f"Razem tłumaczeń było -> {len(tlumaczenia)} <- tłumaczeń")
+
     return wstawiono
 
 
@@ -245,6 +278,12 @@ def importuj_txt_do_json(plik_txt, plik_json):
     with open(plik_txt, encoding="utf-8") as plik:
         for linia in plik:
             linie.append(linia.rstrip("\n").replace("\\n", "\n"))
+
+        if len(linie) != len(dane["segments"]):
+            print("BŁĄD: liczba linii w TXT nie pasuje do liczby segmentów!\n"
+                  f"linie TXT: {len(linie)}\n"
+                  f"segmenty JSON: {len(dane['segments'])}")
+            return 0
 
     zaaktualizowano = 0
     for segment, tekst in zip(dane["segments"], linie):
