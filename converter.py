@@ -5,309 +5,217 @@
 # Uzywamy tylko: funkcje, listy, slowniki, for, if, open(), json, try/except
 
 import json
+import os
+import shutil
 import xml.etree.ElementTree as ET
 
-# To sa "nazwiska" tagow w pliku XML. Python potrzebuje ich, zeby znalezc tagi.
-# Nie musisz ich rozumiec na pamiec - po prostu kopiuj je tak jak sa.
-NAMESPACES = {
-    "sdl": "http://sdl.com/FileTypes/SdlXliff/1.0",
-    "xliff": "urn:oasis:names:tc:xliff:document:1.2",
-}
-XLIFF = "{urn:oasis:names:tc:xliff:document:1.2}"
+class Converter:
 
-# Te statusy znacza: "juz przetlumaczone, nie ruszaj"
-TRANSLATED_STATUSES = ["Translated", "ApprovedTranslation", "ApprovedSignOff"]
+    def __init__(self):
+        # To sa "nazwiska" tagow w pliku XML. Python potrzebuje ich, zeby znalezc tagi.
+        # Nie musisz ich rozumiec na pamiec - po prostu kopiuj je tak jak sa.
+        self.NAMESPACES = {}
+        self.NAMESPACES = {"sdl": "http://sdl.com/FileTypes/SdlXliff/1.0", "xliff": "urn:oasis:names:tc:xliff:document:1.2"}
+        self.XLIFF = ""
+        self.XLIFF = "{urn:oasis:names:tc:xliff:document:1.2}"
+        self.SDL = ""
+        self.SDL = "{http://sdl.com/FileTypes/SdlXliff/1.0}"
+        self.XML_NS = ""
+        self.XML_NS = "{http://www.w3.org/XML/1998/namespace}"
 
+        # Te statusy znacza: "juz przetlumaczone, nie ruszaj"
+        self.TRANSLATED_STATUSES = []
+        self.TRANSLATED_STATUSES = ["Translated", "ApprovedTranslation", "ApprovedSignOff"]
 
-def tekst_z_elementu(element):
-    """Bierze tekst z elementu XML razem z tagami w srodku, np. <g>.
-    Przyklad: Hello <g>world</g> -> "Hello <g>world</g>"
-    """
-    if element is None:
-        return ""
+        self.changed_by_user = 0
+        self.unchanged_segments = 0
+        self.empty_segments = 0
 
-    # Zbieramy kawalki tekstu do jednej listy, na koncu je laczymy.
-    kawalki = []
+    def read_json(self, json_file):
+        with open(json_file, encoding="utf-8") as file:
+            return json.load(file)
 
-    # Tekst przed pierwszym tagiem w srodku
-    if element.text:
-        kawalki.append(element.text)
+    def write_json(self, json_file, data):
+        with open(json_file, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=2)
 
-    # Dla kazdego tagu w srodku...
-    for dziecko in element:
-        if dziecko.tag.startswith("{http://sdl.com/FileTypes/SdlXliff/1.0}"):
-            nazwa = "sdl:" + dziecko.tag.split("}", 1)[-1]
-        elif dziecko.tag.startswith("{"):
-            nazwa = dziecko.tag.split("}", 1)[-1]
-        else:
-            nazwa = dziecko.tag
+    def find_markers(self, parent):
+        # {mid: <mrk>} tylko dla znacznikow segmentow, None -> pusty slownik
+        if parent is None:
+            return {}
+        return {str(m.get("mid")): m for m in parent.findall(".//xliff:mrk", self.NAMESPACES) if m.get("mtype") == "seg" and m.get("mid") is not None}
 
-        # Atrybuty tagu, np. id="1"
-        atrybuty = ""
-        for nazwa_atr, wartosc in dziecko.attrib.items():
-            if nazwa_atr.startswith("{http://www.w3.org/XML/1998/namespace}"):
-                nazwa_atr = "xml:" + nazwa_atr.split("}", 1)[-1]
-            elif nazwa_atr.startswith("{"):
-                nazwa_atr = nazwa_atr.split("}", 1)[-1]
+    def clean(self, name):
+        # "{...}g" -> "g", "{sdl...}g" -> "sdl:g", "{xml...}lang" -> "xml:lang"
+        if name.startswith(self.XML_NS):
+            return "xml:" + name.split("}", 1)[-1]
+        if name.startswith(self.SDL):
+            return "sdl:" + name.split("}", 1)[-1]
+        if name.startswith("{"):
+            return name.split("}", 1)[-1]
+        return name
 
-            bezpieczna = wartosc.replace("&", "&amp;").replace('"', "&quot;")
-            atrybuty = atrybuty + " " + nazwa_atr + '="' + bezpieczna + '"'
+    def text_from_element(self, element):
+        """Takes the text from an XML element together with the tags inside it, e.g. <g>.
+        Example: Hello <g>world</g> -> "Hello <g>world</g>"
+        """
+        if element is None:
+            return ""
+        pieces = []  # Zbieramy kawalki tekstu, na koncu je laczymy.
+        if element.text:  # Tekst przed pierwszym tagiem w srodku
+            pieces.append(element.text)
+        for child in element:
+            # Atrybuty tagu, np. id="1" - & i " musza byc zapisane inaczej, inaczej plik sie zepsuje
+            attributes = "".join(" " + self.clean(n) + '="' + v.replace("&", "&amp;").replace('"', "&quot;") + '"' for n, v in child.attrib.items())
+            inner_text = self.text_from_element(child)  # Tekst w srodku tagu (funkcja wywoluje sama siebie - rekurencja)
+            name = self.clean(child.tag)
+            if inner_text:
+                pieces.append("<" + name + attributes + ">" + inner_text + "</" + name + ">")
+            else:
+                pieces.append("<" + name + attributes + "/>")
+            if child.tail:  # Tekst PO tym tagu
+                pieces.append(child.tail)
+        return "".join(pieces)
 
-        # Tekst w srodku tagu (funkcja wywoluje sama siebie - rekurencja)
-        srodek = tekst_z_elementu(dziecko)
+    def add_namespace(self, element):
+        """AI sometimes returns a plain <g>, but Trados wants a <g> with a namespace.
+        This function adds it to every plain tag.
+        """
+        for child in element:
+            if not child.tag.startswith("{"):
+                child.tag = self.XLIFF + child.tag
+            self.add_namespace(child)
 
-        if srodek:
-            kawalki.append("<" + nazwa + atrybuty + ">" + srodek + "</" + nazwa + ">")
-        else:
-            kawalki.append("<" + nazwa + atrybuty + "/>")
-
-        # Tekst PO tym tagu
-        if dziecko.tail:
-            kawalki.append(dziecko.tail)
-
-    return "".join(kawalki)
-
-
-def daj_przestrzen_nazw(element):
-    """AI czasem zwraca zwykly <g>, a Trados chce <g> z przestrzenia nazw.
-    Ta funkcja dopisuje ja do kazdego zwyklego tagu.
-    """
-    for dziecko in element:
-        if not dziecko.tag.startswith("{"):
-            dziecko.tag = XLIFF + dziecko.tag
-        daj_przestrzen_nazw(dziecko)
-
-
-def eksportuj_do_json(plik_sdlxliff, folder_wyjsciowy):
-    """Czyta .sdlxliff i zapisuje export.json w podanym folderze."""
-    import os
-
-    segmenty = []
-    # Czytami plik XML po jednym trans-unit
-    for _, jednostka in ET.iterparse(plik_sdlxliff, events=('end',)):
-        if not jednostka.tag.endswith("}trans-unit"):
-            continue
-
-        zrodlo = jednostka.find("xliff:seg-source", NAMESPACES)
-        definicje = jednostka.find("sdl:seg-defs", NAMESPACES)
-        cel = jednostka.find("xliff:target", NAMESPACES)
-
-        if zrodlo is None or definicje is None:
-            jednostka.clear()
-            continue
-
-        statusy = {}
-        for definicja in definicje.findall("sdl:seg", NAMESPACES):
-            statusy[definicja.get("id")] = [definicja.get("conf"), definicja.get("locked")]
-
-        stare_tlumaczenia = {}
-        if cel is not None:
-            for znacznik in cel.findall(".//xliff:mrk", NAMESPACES):
-                if znacznik.get("mtype") == "seg":
-                    stare_tlumaczenia[znacznik.get("mid")] = tekst_z_elementu(znacznik)
-
-
-        for znacznik in zrodlo.findall(".//xliff:mrk", NAMESPACES):
-            if znacznik.get("mtype") != "seg":
+    def export_to_json(self, sdlxliff_file, output_folder):
+        """Reads .sdlxliff and saves export.json in the given folder."""
+        segments = []
+        # Czytami plik XML po jednym trans-unit
+        for _, trans_unit in ET.iterparse(sdlxliff_file, events=('end',)):
+            if not trans_unit.tag.endswith("}trans-unit"):
                 continue
-
-            seg_id = znacznik.get("mid")
-            if seg_id not in statusy:
+            source_element = trans_unit.find("xliff:seg-source", self.NAMESPACES)
+            seg_defs = trans_unit.find("sdl:seg-defs", self.NAMESPACES)
+            if source_element is None or seg_defs is None:
+                trans_unit.clear()
                 continue
+            statuses = {str(s.get("id")): [s.get("conf"), s.get("locked")] for s in seg_defs.findall("sdl:seg", self.NAMESPACES) if s.get("id") is not None}
+            old_translations = {mid: self.text_from_element(m) for mid, m in self.find_markers(trans_unit.find("xliff:target", self.NAMESPACES)).items()}
+            for seg_id, marker in self.find_markers(source_element).items():
+                if seg_id not in statuses:
+                    continue
+                status, locked = statuses[seg_id]
+                if locked == "true" or status in self.TRANSLATED_STATUSES:
+                    continue
+                segments.append({"trans-unit_id": str(trans_unit.get("id")), "seg_id": seg_id, "status": status or "Not Translated",
+                                 "source": self.text_from_element(marker), "target": old_translations.get(seg_id, "")})
+            trans_unit.clear()
+        # Zapisujemy do pliku JSON
+        os.makedirs(output_folder, exist_ok=True)
+        self.write_json(os.path.join(output_folder, "export.json"), {"segments": segments})
+        print("Done! Exported", len(segments), "segments.")
+        return len(segments)
 
-            status, zablokowany = statusy[seg_id]
-
-            if zablokowany == "true" or status in TRANSLATED_STATUSES:
-                continue
-
-            segmenty.append({
-                "trans-unit_id": jednostka.get("id"),
-                "seg_id": seg_id,
-                "status": status or "Not Translated",
-                "source": tekst_z_elementu(znacznik),
-                "target": stare_tlumaczenia.get(seg_id, "")
-                })
-
-        jednostka.clear()
-
-    # Zapisujemy do pliku JSON
-    os.makedirs(folder_wyjsciowy, exist_ok=True)
-    sciezka = os.path.join(folder_wyjsciowy, "export.json")
-    with open(sciezka, "w", encoding="utf-8") as plik:
-        json.dump({"segments": segmenty}, plik, ensure_ascii=False, indent=2)
-
-    print("Gotowe! Wyeksportowano", len(segmenty), "segmentow.")
-    return len(segmenty)
-
-def importuj_do_sdlxliff(plik_sdlxliff, plik_json, plik_wyjsciowy):
-    """Wstawia tlumaczenia z JSON z powrotem do pliku .sdlxliff."""
-    import shutil
-    import os
-
-    if plik_wyjsciowy == plik_sdlxliff:
-        print("NIE ZAPISANO: plik wyjściowy to ten sam plik co wejściowy!")
-        return 0
-
-    if not os.path.exists(plik_sdlxliff + ".bak"):
-        shutil.copy(plik_sdlxliff, plik_sdlxliff + ".bak")
-
-    with open(plik_json, encoding="utf-8") as plik:
-        dane = json.load(plik)
-
-    # Slownik: (id_jednostki, id_segmentu) -> tlumaczenie
-    tlumaczenia = {}
-    for segment in dane["segments"]:
-        tekst = segment.get("target", "").strip()
-        if tekst:
-            klucz = (str(segment["trans-unit_id"]), str(segment["seg_id"]))
-            tlumaczenia[klucz] = tekst
-
-    drzewo = ET.parse(plik_sdlxliff)
-    korzen = drzewo.getroot()
-
-    wstawiono = 0
-    pominieto = 0
-
-    for jednostka in korzen.findall(".//xliff:trans-unit", NAMESPACES):
-        jednostka_id = str(jednostka.get("id"))
-        cel = jednostka.find("xliff:target", NAMESPACES)
-        definicje = jednostka.find("sdl:seg-defs", NAMESPACES)
-        zrodlo = jednostka.find("xliff:seg-source", NAMESPACES)
-
-        if cel is None or definicje is None:
-            pominieto += 1
-            continue
-
-        # Znajdz istniejace znaczniki <mrk> w celu: id -> element
-        znaczniki = {}
-        for znacznik in cel.findall(".//xliff:mrk", NAMESPACES):
-            if znacznik.get("mtype") == "seg":
-                znaczniki[znacznik.get("mid")] = znacznik
-
-        zrodla = {}
-        if zrodlo is not None:
-            for znacznik in zrodlo.findall(".//xliff:mrk", NAMESPACES):
-                if znacznik.get("mtype") == "seg":
-                    zrodla[znacznik.get("mid")] = tekst_z_elementu(znacznik)
-
-        for definicja in definicje.findall("sdl:seg", NAMESPACES):
-            seg_id = definicja.get("id")
-            klucz = (jednostka_id, seg_id)
-
-            if klucz not in tlumaczenia:
-                continue
-
-            # Jesli nie ma znacznika w celu, tworzymy nowy
-            if seg_id not in znaczniki:
-                nowy = ET.SubElement(cel, XLIFF + "mrk")
-                nowy.set("mtype", "seg")
-                nowy.set("mid", seg_id)
-                znaczniki[seg_id] = nowy
-
-            znacznik = znaczniki[seg_id]
-            nowy_tekst = tlumaczenia[klucz]
-
-            zrodlo_tekst = zrodla.get(seg_id, "")
-            if zrodlo_tekst.count("<") != nowy_tekst.count("<"):
-                print(f"UWAGA: inna liczba tagów w segmencie {seg_id}")
-                print(f"Źródło: {zrodlo_tekst}")
-                print(f"Tłumaczenie: {nowy_tekst}")
-
-            # Czyscimy stary tekst, ale zachowujemy atrybuty
-            stare_atrybuty = dict(znacznik.attrib)
-            stary_tail = znacznik.tail
-            znacznik.clear()
-
-            for nazwa, wartosc in stare_atrybuty.items():
-                znacznik.set(nazwa, wartosc)
-            znacznik.set("mtype", "seg")
-            znacznik.set("mid", seg_id)
-            znacznik.tail = stary_tail
-
-            # Probujemy wstawic tekst z tagami jako XML.
-            # Jesli sie nie uda (np. zwykly znak &), wstawiamy jako zwykly tekst.
-            try:
-                opakowanie = '<wrap xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:sdl="http://sdl.com/FileTypes/SdlXliff/1.0">' + nowy_tekst + "</wrap>"
-                fragment = ET.fromstring(opakowanie)
-                daj_przestrzen_nazw(fragment)
-                znacznik.text = fragment.text
-                for dziecko in fragment:
-                    znacznik.append(dziecko)
-            except ET.ParseError:
-                znacznik.text = nowy_tekst
-
-            definicja.set("conf", "Draft")
-            wstawiono += 1
-
-    # Rejestrujemy przestrzenie nazw, zeby plik wygladal ladnie
-    ET.register_namespace("sdl", "http://sdl.com/FileTypes/SdlXliff/1.0")
-    ET.register_namespace("", "urn:oasis:names:tc:xliff:document:1.2")
-    drzewo.write(plik_wyjsciowy, encoding="utf-8", xml_declaration=True)
-
-    print(f"{wstawiono=}")
-    print(f"{pominieto=}")
-    print(f"Razem tłumaczeń było -> {len(tlumaczenia)} <- tłumaczeń")
-
-    return wstawiono
-
-
-def eksportuj_json_do_txt(plik_json, folder_wyjsciowy):
-    """JSON -> 2 pliki TXT: jeden tylko do czytania, drugi do tlumaczenia."""
-    import os
-
-    with open(plik_json, encoding="utf-8") as plik:
-        dane = json.load(plik)
-
-    nazwa = os.path.splitext(os.path.basename(plik_json))[0]
-    os.makedirs(folder_wyjsciowy, exist_ok=True)
-
-    sciezka_zrodlo = os.path.join(folder_wyjsciowy, nazwa + "_source.txt")
-    sciezka_cel = os.path.join(folder_wyjsciowy, nazwa + "_target.txt")
-
-    with open(sciezka_zrodlo, "w", encoding="utf-8") as plik_zrodlo:
-        with open(sciezka_cel, "w", encoding="utf-8") as plik_cel:
-            for segment in dane["segments"]:
-                zrodlo_jedna_linia = segment["source"].replace("\n", "\\n")
-                plik_zrodlo.write(zrodlo_jedna_linia + "\n")
-
-                cel_jedna_linia = (segment.get("target") or "").replace("\n", "\\n")
-                plik_cel.write(cel_jedna_linia + "\n")
-
-    print("TXT gotowe.")
-    return len(dane["segments"])
-
-
-def importuj_txt_do_json(plik_txt, plik_json):
-    """Czyta przetlumaczony TXT i wstawia tlumaczenia z powrotem do JSON."""
-    with open(plik_json, encoding="utf-8") as plik:
-        dane = json.load(plik)
-
-    linie = []
-    with open(plik_txt, encoding="utf-8") as plik:
-        for linia in plik:
-            linie.append(linia.rstrip("\n").replace("\\n", "\n"))
-
-        if len(linie) != len(dane["segments"]):
-            print("BŁĄD: liczba linii w TXT nie pasuje do liczby segmentów!\n"
-                  f"linie TXT: {len(linie)}\n"
-                  f"segmenty JSON: {len(dane['segments'])}")
+    def import_to_sdlxliff(self, sdlxliff_file, json_file, output_file):
+        """Inserts translations from JSON back into the .sdlxliff file."""
+        if output_file == sdlxliff_file:
+            print("NOT SAVED: the output file is the same file as the input file!")
             return 0
+        if not os.path.exists(sdlxliff_file + ".bak"):
+            shutil.copy(sdlxliff_file, sdlxliff_file + ".bak")
+        data = self.read_json(json_file)
+        # Slownik: (id_jednostki, id_segmentu) -> tlumaczenie
+        translations = {(str(s["trans-unit_id"]), str(s["seg_id"])): s.get("target", "").strip() for s in data["segments"] if s.get("target", "").strip()}
+        tree = ET.parse(sdlxliff_file)
+        root = tree.getroot()
+        inserted = 0
+        skipped = 0
+        for trans_unit in root.findall(".//xliff:trans-unit", self.NAMESPACES):
+            trans_unit_id = str(trans_unit.get("id"))
+            target_element = trans_unit.find("xliff:target", self.NAMESPACES)
+            seg_defs = trans_unit.find("sdl:seg-defs", self.NAMESPACES)
+            if target_element is None or seg_defs is None:
+                skipped += 1
+                continue
+            markers = self.find_markers(target_element)  # Znajdz istniejace znaczniki <mrk> w celu: id -> element
+            sources = {mid: self.text_from_element(m) for mid, m in self.find_markers(trans_unit.find("xliff:seg-source", self.NAMESPACES)).items()}
+            for seg_def in seg_defs.findall("sdl:seg", self.NAMESPACES):
+                seg_id = seg_def.get("id")
+                if seg_id is None:  # seg bez id - nie da sie go dopasowac do tlumaczenia
+                    continue
+                if (trans_unit_id, seg_id) not in translations:
+                    continue
+                if seg_id not in markers:  # Jesli nie ma znacznika w celu, tworzymy nowy
+                    markers[seg_id] = ET.SubElement(target_element, self.XLIFF + "mrk")
+                    markers[seg_id].set("mtype", "seg")
+                    markers[seg_id].set("mid", seg_id)
+                marker = markers[seg_id]
+                new_text = translations[(trans_unit_id, seg_id)]
+                source_text = sources.get(seg_id, "")
+                if source_text.count("<") != new_text.count("<"):
+                    print(f"WARNING: different number of tags in segment {seg_id}")
+                    print(f"Source: {source_text}")
+                    print(f"Translation: {new_text}")
+                # Czyscimy stary tekst, ale zachowujemy atrybuty
+                old_attributes, old_tail = dict(marker.attrib), marker.tail
+                marker.clear()
+                for name, value in old_attributes.items():
+                    marker.set(name, value)
+                marker.set("mtype", "seg")
+                marker.set("mid", seg_id)
+                marker.tail = old_tail
+                # Probujemy wstawic tekst z tagami jako XML. Jesli sie nie uda (np. zwykly znak &), wstawiamy jako zwykly tekst.
+                try:
+                    fragment = ET.fromstring('<wrap xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:sdl="http://sdl.com/FileTypes/SdlXliff/1.0">' + new_text + "</wrap>")
+                    self.add_namespace(fragment)
+                    marker.text = fragment.text
+                    for child in fragment:
+                        marker.append(child)
+                except ET.ParseError:
+                    marker.text = new_text
+                seg_def.set("conf", "Draft")
+                inserted += 1
+        # Rejestrujemy przestrzenie nazw, zeby plik wygladal ladnie
+        ET.register_namespace("sdl", "http://sdl.com/FileTypes/SdlXliff/1.0")
+        ET.register_namespace("", "urn:oasis:names:tc:xliff:document:1.2")
+        tree.write(output_file, encoding="utf-8", xml_declaration=True)
+        print(f"{inserted=}")
+        print(f"{skipped=}")
+        print(f"Total translations were -> {len(translations)} - {self.unchanged_segments}")
+        return inserted
 
-    zmienione_przez_uzytkownika = 0
-    segmenty_bez_zmian = 0
-    segmenty_puste = 0
-    for segment, tekst in zip(dane["segments"], linie):
-        stary = segment.get("target") or ""
-        if not tekst.strip():
-            segmenty_puste += 1
-        elif stary != tekst:
-            segment["target"] = tekst
-            zmienione_przez_uzytkownika += 1
-        else:
-            segmenty_bez_zmian += 1
+    def export_json_to_txt(self, json_file, output_folder):
+        """JSON -> 2 TXT files: one read-only, one for translating."""
+        data = self.read_json(json_file)
+        base_name = os.path.splitext(os.path.basename(json_file))[0]
+        os.makedirs(output_folder, exist_ok=True)
+        with open(os.path.join(output_folder, base_name + "_source.txt"), "w", encoding="utf-8") as source_file:
+            with open(os.path.join(output_folder, base_name + "_target.txt"), "w", encoding="utf-8") as target_file:
+                for segment in data["segments"]:
+                    source_file.write(segment["source"].replace("\n", "\\n") + "\n")
+                    target_file.write((segment.get("target") or "").replace("\n", "\\n") + "\n")
+        print("TXT done.")
+        return len(data["segments"])
 
-    with open(plik_json, "w", encoding="utf-8") as plik:
-        json.dump(dane, plik, ensure_ascii=False, indent=2)
-
-    print(f"TXT -> JSON: segmenty zmienione przez użytkownika: {zmienione_przez_uzytkownika}, segmenty bez zmian {segmenty_bez_zmian}, segmenty puste {segmenty_puste} / razem {len(dane['segments'])}")
-    return zmienione_przez_uzytkownika
+    def import_txt_to_json(self, txt_file, json_file):
+        """Reads the translated TXT and inserts the translations back into the JSON."""
+        data = self.read_json(json_file)
+        with open(txt_file, encoding="utf-8") as file:
+            lines = [line.rstrip("\n").replace("\\n", "\n") for line in file]
+        if len(lines) != len(data["segments"]):
+            print("ERROR: the number of lines in the TXT does not match the number of segments!\n"
+                  f"TXT lines: {len(lines)}\n"
+                  f"JSON segments: {len(data['segments'])}")
+            return 0
+        changed_by_user = self.unchanged_segments = empty_segments = 0
+        for segment, text in zip(data["segments"], lines):
+            old_text = segment.get("target") or ""
+            if not text.strip():
+                empty_segments += 1
+            elif old_text != text:
+                segment["target"] = text
+                changed_by_user += 1
+            else:
+                self.unchanged_segments += 1
+        self.write_json(json_file, data)
+        print(f"TXT -> JSON: segments changed by user: {self.changed_by_user}, unchanged segments {self.unchanged_segments}, empty segments {self.empty_segments} / total {len(data['segments'])}")
+        return changed_by_user
