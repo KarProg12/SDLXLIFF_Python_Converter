@@ -2,9 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 # Importujemy funkcje z drugiego pliku
-from converter import eksportuj_do_json, importuj_do_sdlxliff
-from converter import eksportuj_json_do_txt, importuj_txt_do_json
-import json
+from converter import eksportuj_do_json, importuj_do_sdlxliff, eksportuj_json_do_txt, importuj_txt_do_json
 
 
 # --- 1. Okno glowne ---
@@ -15,7 +13,7 @@ okno.geometry("640x545")
 # --- 2. Pudeleczka na sciezki ---
 # Kazde pudeleczko przechowuje jedna sciezke wybrana przez uzytkownika.
 sciezki = {}
-for nazwa in ["eksport_plik", "eksport_folder", "eksport_baza",
+for nazwa in ["eksport_plik", "eksport_folder",
               "import_plik", "import_json", "import_zapisz",
               "txt_json", "txt_folder", "txt_do_importu"]:
     sciezki[nazwa] = tk.StringVar()
@@ -48,10 +46,14 @@ def pokaz_blad_lub_wykonaj(co_robimy):
     try:
         wiadomosc = co_robimy()
         status.set(wiadomosc)
-        messagebox.showinfo("Gotowe", wiadomosc)
-    except Exception as blad:
-        status.set("BLAD: " + str(blad))
-        messagebox.showerror("Blad", str(blad))
+        if wiadomosc.startswith("UWAGA"):
+            messagebox.showwarning("Uwaga", wiadomosc)
+        else:
+            messagebox.showinfo("Gotowe", wiadomosc)
+
+    except Exception as error:
+        status.set("BŁĄD: " + str(error))
+        messagebox.showerror("Błąd", str(error))
 
 
 # --- 3. Co robi kazdy przycisk ---
@@ -62,12 +64,6 @@ def kliknij_eksport():
         return
 
     def zadanie():
-        baza = None
-        if sciezki["eksport_baza"].get():
-            with open(sciezki["eksport_baza"].get(), encoding="utf-8") as plik:
-                baza = json.load(plik)
-        # UWAGA: prosta wersja nie uzywa bazy terminow (to byl dodatek).
-        # Jesli chcesz ja wrocic, dopisz ja w converter_prosty.py.
         liczba = eksportuj_do_json(sciezki["eksport_plik"].get(), sciezki["eksport_folder"].get())
         return "Eksport gotowy. Wyeksportowano " + str(liczba) + " segmentow."
 
@@ -81,6 +77,8 @@ def kliknij_import():
 
     def zadanie():
         liczba = importuj_do_sdlxliff(sciezki["import_plik"].get(), sciezki["import_json"].get(), sciezki["import_zapisz"].get())
+        if liczba == 0:
+            return "UWAGA: Wstawiono 0. Sprawdź, czy plik wyjściowy to nie ten sam plik co wejściowy, albo czy JSON ma tłumaczenia target."
         return "Import gotowy. Wstawiono " + str(liczba) + " segmentow."
 
     pokaz_blad_lub_wykonaj(zadanie)
@@ -105,6 +103,8 @@ def kliknij_txt_import():
 
     def zadanie():
         liczba = importuj_txt_do_json(sciezki["txt_do_importu"].get(), sciezki["txt_json"].get())
+        if liczba == 0:
+            return "UWAGA: Zaktualizowano 0. Sprawdz, czy liczba linii w TXT pasuje do liczby segmentow w JSON."
         return "TXT -> JSON gotowe. Zaktualizowano " + str(liczba) + " segmentow."
 
     pokaz_blad_lub_wykonaj(zadanie)
@@ -116,8 +116,7 @@ pudelko_eksport = ttk.LabelFrame(okno, text=" Eksport SDLXLIFF -> JSON ", paddin
 pudelko_eksport.pack(fill="x", padx=10, pady=(10, 5))
 dodaj_rzad(pudelko_eksport, 0, "Plik SDLXLIFF:", sciezki["eksport_plik"], "plik")
 dodaj_rzad(pudelko_eksport, 1, "Folder wyjsciowy:", sciezki["eksport_folder"], "folder")
-dodaj_rzad(pudelko_eksport, 2, "Baza terminow (opcjonalnie):", sciezki["eksport_baza"], "plik")
-ttk.Button(pudelko_eksport, text="Eksportuj do JSON", command=kliknij_eksport).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+ttk.Button(pudelko_eksport, text="Eksportuj do JSON", command=kliknij_eksport).grid(row=2, column=0, columnspan=3, sticky="ew", pady=(6, 0))
 
 pudelko_txt = ttk.LabelFrame(okno, text=" TXT: JSON <-> 2 pliki TXT ", padding=8)
 pudelko_txt.pack(fill="x", padx=10, pady=5)

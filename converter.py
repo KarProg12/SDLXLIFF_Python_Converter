@@ -1,4 +1,3 @@
-# converter_prosty.py - WERSJA PROSTA
 # Co robi ten plik?
 # 1. Czyta plik .sdlxliff i zapisuje segmenty do export.json
 # 2. Czyta export.json i wstawia tlumaczenia z powrotem do .sdlxliff
