@@ -6,8 +6,6 @@ Workflow: **SDLXLIFF → JSON → 2x TXT → JSON → SDLXLIFF**
 
 The original SDLXLIFF file is never modified. The tool exports segments to JSON, optionally to plain TXT files for easy editing, then writes the translations back into a new SDLXLIFF file.
 
-This version has no GUI. It is 4 plain functions. It is written for beginners: only functions, lists, dicts, `for`, `if`, `open()`, `json`, `try/except`.
-
 ## Features
 
 - Export SDLXLIFF to JSON (only unlocked, untranslated segments)
