@@ -2,7 +2,7 @@
 
 A simple tool for translating SDLXLIFF files.
 
-Workflow: **SDLXLIFF → JSON → TXT → JSON → SDLXLIFF**
+Workflow: **SDLXLIFF → JSON → 2x TXT → JSON → SDLXLIFF**
 
 The original SDLXLIFF file is never modified. The tool exports segments to JSON, optionally to plain TXT files for easy editing, then writes the translations back into a new SDLXLIFF file.
 
