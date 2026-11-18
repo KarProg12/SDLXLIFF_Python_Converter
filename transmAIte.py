@@ -1,10 +1,3 @@
-# transmAIte_prosty.py - WERSJA PROSTA (okienko)
-# Co robi ten plik? Pokazuje okienko z przyciskami.
-# Kazdy przycisk wywoluje jedna funkcje z pliku converter_prosty.py.
-# Uzywamy tylko: tkinter, funkcje, if, try/except.
-# NIE ma tu watkow (threading) - program na chwile "zamrozi" okienko
-# podczas pracy, ale kod jest o wiele prostszy do przeczytania.
-
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
