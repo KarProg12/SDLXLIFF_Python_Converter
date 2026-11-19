@@ -7,7 +7,7 @@ from tkinter import ttk
 
 from converter import Converter as CNV
 
-class TransmAIte:
+class TransMAiTE:
     def __init__(self):
         # Kolory z ikony aplikacji: ciemne tlo + zielen z ikony
         self.BG_DARK = "#232323"
@@ -18,7 +18,7 @@ class TransmAIte:
         self.GREEN_LIGHT = "#2A3D30"
 
         self.root_win = tk.Tk()
-        self.root_win.title("TransmAIte (SDLXLIFF <- 2x TXT -> JSON)")
+        self.root_win.title("TransMAiTE")
         self.root_win.geometry("685x778")
         self.root_win.configure(bg=self.BG_DARK)
 
@@ -44,7 +44,7 @@ class TransmAIte:
         top = ttk.Frame(self.root_win, style="Top.TFrame", height=40)
         top.pack(fill="x")
         top.pack_propagate(False)
-        ttk.Label(top, text="  TransmAIte", style="Top.TLabel").pack(side="left")
+        ttk.Label(top, text="  TransMAiTE", style="Top.TLabel").pack(side="left")
         ttk.Label(top, text="SDLXLIFF  <->  TXT  <->  JSON  ", style="TopSmall.TLabel").pack(side="right", padx=12)
 
         # Sciezki - jedna petla, tak jak bylo wczesniej, bo to tu jest czytelniejsze
@@ -150,5 +150,5 @@ class TransmAIte:
         self.root_win.mainloop()
 
 if __name__ == "__main__":
-    plugin = TransmAIte()
+    plugin = TransMAiTE()
     plugin.run()

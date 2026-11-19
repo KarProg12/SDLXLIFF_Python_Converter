@@ -10,7 +10,6 @@ import shutil
 import xml.etree.ElementTree as ET
 
 class Converter:
-
     def __init__(self):
         # To sa "nazwiska" tagow w pliku XML. Python potrzebuje ich, zeby znalezc tagi.
         # Nie musisz ich rozumiec na pamiec - po prostu kopiuj je tak jak sa.
