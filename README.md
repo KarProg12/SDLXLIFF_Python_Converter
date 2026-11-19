@@ -1,66 +1,69 @@
 # TransmAIte — SDLXLIFF ↔ JSON / TXT Converter
 
-Aplikacja desktopowa napisana w Pythonie, która ułatwia tłumaczenie plików **SDLXLIFF** (stosowanych m.in. w programie Trados Studio) za pomocą modeli AI (LLM) lub zewnętrznych narzędzi tekstowych. Program wyciąga nieprzetłumaczone segmenty wraz z tagami XML, konwertuje je do wygodnych formatów pośrednich (**JSON** oraz par plików **TXT**), a następnie bezpiecznie wstrzykuje gotowe tłumaczenia z powrotem do struktury pliku `.sdlxliff`.
+A desktop application written in Python that facilitates the translation of **SDLXLIFF** files (used, amongst other things, in Trados Studio) using AI models (LLMs) or external text tools. The programme extracts untranslated segments along with their XML tags, converts them into convenient intermediate formats (**JSON** and pairs of **TXT** files), and then safely injects the finished translations back into the `.sdlxliff` file structure.
 
-## ✨ Główne funkcjonalności
+## ✨ Key features
 
-* **Inteligentny eksport SDLXLIFF → JSON (`eksportuj_do_json`):**
-  * Filtruje segmenty — eksportuje tylko te nieprzetłumaczone i niezablokowane (pomija statusy `Translated`, `ApprovedTranslation`, `ApprovedSignOff` oraz segmenty z atrybutem `locked="true"`).
-  * Zachowuje identyfikatory (`trans-unit_id`, `seg_id`), istniejące robocze tłumaczenia oraz wewnętrzne tagi formatujące XML (np. `<g>`, `<x/>`).
-  * Przetwarza plik strumieniowo (`ET.iterparse`), co ogranicza zużycie pamięci przy dużych plikach.
-* **Dwukierunkowa konwersja JSON ↔ 2x TXT (`eksportuj_json_do_txt`, `importuj_txt_do_json`):**
-  * Generuje dwa zsynchronizowane liniami pliki: `export_source.txt` (tylko do odczytu) oraz `export_target.txt` (do tłumaczenia).
-  * Zamienia wewnętrzne znaki nowej linii na sekwencję `\n`, gwarantując układ **1 linia = 1 segment**.
-  * Przy imporcie sprawdza zgodność liczby linii między plikiem TXT a segmentami w JSON oraz raportuje statystyki (zmienione, bez zmian, puste).
-* **Bezpieczny import JSON → SDLXLIFF (`importuj_do_sdlxliff`):**
-  * Tworzy automatyczną kopię zapasową pliku źródłowego z rozszerzeniem `.bak`.
-  * Blokuje przypadkowe nadpisanie oryginalnego pliku wejściowego.
-  * Weryfikuje liczbę tagów (`<`) między źródłem a tłumaczeniem i ostrzega w konsoli w przypadku rozbieżności.
-  * Odtwarza wymagane przez Tradosa przestrzenie nazw XML (`xliff` / `sdl`) oraz ustawia status zaimportowanych segmentów na `Draft`.
-* **Prosty interfejs graficzny (GUI):**
-  * Intuicyjne okno podzielone na trzy sekcje robocze z oknami wyboru plików/folderów oraz paskiem statusu na dole ekranu.
+* **Smart SDLXLIFF → JSON export (`export_to_json`):**
+  * Filters segments — exports only those that are untranslated and unlocked (skips the statuses `Translated`, `ApprovedTranslation`, `ApprovedSignOff` and segments with the attribute `locked="true"`).
+  * Preserves identifiers (`trans-unit_id`, `seg_id`), existing working translations and internal XML formatting tags (e.g. `<g>`, `<x/>`).
+  * Processes the file in-stream (`ET.iterparse`), which reduces memory usage with large files.
+* **Two-way conversion between JSON and 2x TXT (`export_json_to_txt`, `import_txt_to_json`):**
+  * Generates two line-synchronised files: `export_source.txt` (read-only) and `export_target.txt` (for translation).
+  * Replaces internal newline characters with the sequence `\n`, ensuring a **1 line = 1 segment** layout.
+  * During import, it checks that the number of lines in the TXT file matches the number of segments in the JSON file and reports statistics (changed, unchanged, empty).
+* **Safe JSON → SDLXLIFF import (`import_to_sdlxliff`):**
+  * Creates an automatic backup of the source file with the `.bak` extension.
+  * Prevents the original input file from being accidentally overwritten.
+  * Verifies the number of tags (`<`) between the source and translation and issues a warning in the console in the event of discrepancies.
+  * Reconstructs the XML namespaces required by Trados (`xliff` / `sdl`) and sets the status of imported segments to `Draft`.
+* **Simple graphical user interface (GUI):**
+  * An intuitive window divided into three working sections, with file/folder selection windows and a status bar at the bottom of the screen.
 
-## 🛠️ Technologie
+## 🛠️ Technologies
 
-Projekt opiera się w 100% na **bibliotece standardowej Pythona 3** — nie wymaga instalowania żadnych zewnętrznych pakietów (`pip`):
+The project is based entirely on the **Python 3 standard library** — it does not require the installation of any external packages (`pip`):
 
-* `tkinter` (`filedialog`, `messagebox`, `ttk`) — interfejs graficzny aplikacji
-* `xml.etree.ElementTree` — parsowanie, rekonstrukcja tagów i zapis plików SDLXLIFF
-* `json` — obsługa pośredniego formatu danych `export.json`
-* `os`, `shutil` — zarządzanie ścieżkami, tworzenie katalogów i kopii zapasowych `.bak`
+* `tkinter` (`filedialog`, `messagebox`, `ttk`) — the application’s graphical user interface
+* `xml.etree.ElementTree` — parsing, tag reconstruction and saving of SDLXLIFF files
+* `json` — handling of the intermediate data format `export.json`
+* `os`, `shutil` — path management, creating directories and `.bak` backups
 
-## 📂 Struktura repozytorium
+## 📂 Repository structure
 
-* `transmAIte.py` — główny plik uruchomieniowy zawierający interfejs graficzny (`tkinter`) oraz obsługę zdarzeń i komunikatów błędów.
-* `converter.py` — warstwa logiki biznesowej odpowiedzialna za parsowanie XML, obsługę przestrzeni nazw oraz konwersję między formatami `.sdlxliff`, `.json` i `.txt`.
+* `transmAIte.py` — the main executable file containing the graphical user interface (`tkinter`) as well as event handling and error messages.
+* `converter.py` — the business logic layer responsible for XML parsing, namespace handling and conversion between the `.sdlxliff`, `.json` and `.txt` formats.
 
-## 🚀 Instalacja i uruchomienie
+## 🚀 Installation and setup
 
-1. **Upewnij się, że masz zainstalowanego Pythona 3** (wraz z modułem `tkinter`, który jest domyślnie dołączany w instalatorach dla Windows i macOS).
-2. **Sklonuj repozytorium:**
+1. **Ensure you have Python 3 installed** (along with the `tkinter` module, which is included by default in installers for Windows and macOS).
+2. **Clone the repository:**
    ```bash
    git clone https://github.com
    cd SDLXLIFF_Python_Converter
    ```
-3. **Uruchom program:**
+3. **Run the programme:**
    ```bash
    python transmAIte.py
    ```
 
-## 📖 Instrukcja krok po kroku (Workflow)
+## 📖 Step-by-step guide (Workflow)
 
-1. **Eksport segmentów z SDLXLIFF:**
-   * W sekcji **Eksport SDLXLIFF -> JSON** wybierz plik `.sdlxliff` oraz folder wyjściowy.
-   * Kliknij **Eksportuj do JSON**, aby utworzyć plik `export.json`.
-2. **Tłumaczenie (wybierz jedną z dróg):**
-   * **Ścieżka TXT (wygodna dla AI / edytorów):** W sekcji **TXT: JSON <-> 2 pliki TXT** wskaż plik `export.json` i folder docelowy, a następnie kliknij **JSON -> 2 pliki TXT**. Przetłumacz zawartość pliku `export_target.txt` (zachowując dokładnie tę samą liczbę linii oraz tagi XML, np. `<g id="1">...</g>`), po czym wczytaj go z powrotem przyciskiem **TXT -> JSON**.
-   * **Ścieżka JSON:** Uzupełnij bezpośrednio wartości klucza `"target"` w pliku `export.json`.
-3. **Zapis gotowego pliku SDLXLIFF:**
-   * W sekcji **Import JSON -> SDLXLIFF** wybierz oryginalny plik `.sdlxliff`, zaktualizowany `export.json` oraz nową nazwę/ścieżkę pliku wynikowego.
-   * Kliknij **Importuj do SDLXLIFF**. Wynikowy plik jest gotowy do otwarcia i weryfikacji w programie CAT (np. Trados Studio).
+1. **Export segments from SDLXLIFF:**
+   * In the **Export SDLXLIFF -> JSON** section, select the `.sdlxliff` file and the output folder.
+   * Click **Export to JSON** to create the `export.json` file.
+2. **Translation (choose one of the following options):**
+   * **TXT path (convenient for AI / editors):** In the **TXT: JSON <-> 2 TXT files** section, specify the `export.json` file and the destination folder, then click **JSON -> 2 TXT files**. Translate the contents of the `export_target.txt` file (ensuring you retain exactly the same number of lines and XML tags, e.g. `<g id="1">...</g>`), then import it back using the **TXT -> JSON** button.
+   * **JSON path:** Enter the values for the `"target"` key directly in the `export.json` file.
+3. **Saving the finished SDLXLIFF file:**
+   * In the **Import JSON -> SDLXLIFF** section, select the original `.sdlxliff` file, the updated `export.json` file and a new name/path for the output file.
+   * Click **Import to SDLXLIFF**. The resulting file is ready to be opened and verified in a CAT tool (e.g. Trados Studio).
 
-## ⚠️ Ważne wskazówki
+## ⚠️ Important tips
 
-* **Nie usuwaj ani nie zmieniaj liczby linii** w pliku `*_target.txt` — program dopasowuje tłumaczenia do segmentów na podstawie numeru linii.
-* **Zachowuj tagi XML** widoczne w segmencie źródłowym (np. `<g id="1">tekst</g>`), aby uniknąć błędów struktury w programie Trados Studio.
-* Plik wyjściowy `.sdlxliff` musi mieć inną nazwę lub lokalizację niż plik wejściowy.
+* **Do not delete or change the line numbers** in the `*_target.txt` file — the programme matches translations to segments based on the line number.
+* **Retain the XML tags** visible in the source segment (e.g. `<g id="1">text</g>`) to avoid structural errors in Trados Studio.
+* The output `.sdlxliff` file must have a different name or location to the input file.
+
+
+Przetłumaczono za pomocą DeepL (https://dee.pl/apps)
