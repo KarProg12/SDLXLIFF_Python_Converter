@@ -14,17 +14,12 @@ class Converter:
     def __init__(self):
         # To sa "nazwiska" tagow w pliku XML. Python potrzebuje ich, zeby znalezc tagi.
         # Nie musisz ich rozumiec na pamiec - po prostu kopiuj je tak jak sa.
-        self.NAMESPACES = {}
         self.NAMESPACES = {"sdl": "http://sdl.com/FileTypes/SdlXliff/1.0", "xliff": "urn:oasis:names:tc:xliff:document:1.2"}
-        self.XLIFF = ""
         self.XLIFF = "{urn:oasis:names:tc:xliff:document:1.2}"
-        self.SDL = ""
         self.SDL = "{http://sdl.com/FileTypes/SdlXliff/1.0}"
-        self.XML_NS = ""
         self.XML_NS = "{http://www.w3.org/XML/1998/namespace}"
 
         # Te statusy znacza: "juz przetlumaczone, nie ruszaj"
-        self.TRANSLATED_STATUSES = []
         self.TRANSLATED_STATUSES = ["Translated", "ApprovedTranslation", "ApprovedSignOff"]
 
         self.changed_by_user = 0
@@ -129,6 +124,7 @@ class Converter:
         root = tree.getroot()
         inserted = 0
         skipped = 0
+        changed_by_user = 0
         for trans_unit in root.findall(".//xliff:trans-unit", self.NAMESPACES):
             trans_unit_id = str(trans_unit.get("id"))
             target_element = trans_unit.find("xliff:target", self.NAMESPACES)
@@ -150,6 +146,9 @@ class Converter:
                     markers[seg_id].set("mid", seg_id)
                 marker = markers[seg_id]
                 new_text = translations[(trans_unit_id, seg_id)]
+                old_text = self.text_from_element(marker)
+                if old_text != new_text:
+                    changed_by_user += 1
                 source_text = sources.get(seg_id, "")
                 if source_text.count("<") != new_text.count("<"):
                     print(f"WARNING: different number of tags in segment {seg_id}")
@@ -180,19 +179,17 @@ class Converter:
         tree.write(output_file, encoding="utf-8", xml_declaration=True)
         print(f"{inserted=}")
         print(f"{skipped=}")
-        print(f"Total translations were -> {len(translations)} - {self.unchanged_segments}")
+        print(f"Segments changed by user: {changed_by_user}")
         return inserted
 
     def export_json_to_txt(self, json_file, output_folder):
         """JSON -> 2 TXT files: one read-only, one for translating."""
         data = self.read_json(json_file)
-        base_name = os.path.splitext(os.path.basename(json_file))[0]
         os.makedirs(output_folder, exist_ok=True)
-        with open(os.path.join(output_folder, base_name + "_source.txt"), "w", encoding="utf-8") as source_file:
-            with open(os.path.join(output_folder, base_name + "_target.txt"), "w", encoding="utf-8") as target_file:
+        with open(os.path.join(output_folder, "source.txt"), "w", encoding="utf-8") as source_file:
+            with open(os.path.join(output_folder, "target.txt"), "w", encoding="utf-8") as target_file:
                 for segment in data["segments"]:
                     source_file.write(segment["source"].replace("\n", "\\n") + "\n")
-                    target_file.write((segment.get("target") or "").replace("\n", "\\n") + "\n")
         print("TXT done.")
         return len(data["segments"])
 
@@ -201,21 +198,23 @@ class Converter:
         data = self.read_json(json_file)
         with open(txt_file, encoding="utf-8") as file:
             lines = [line.rstrip("\n").replace("\\n", "\n") for line in file]
+        while len(lines) > len(data["segments"]) and lines[-1] == "":
+            lines.pop()
         if len(lines) != len(data["segments"]):
             print("ERROR: the number of lines in the TXT does not match the number of segments!\n"
                   f"TXT lines: {len(lines)}\n"
                   f"JSON segments: {len(data['segments'])}")
             return 0
-        changed_by_user = self.unchanged_segments = empty_segments = 0
+        self.changed_by_user = self.unchanged_segments = self.empty_segments = 0
         for segment, text in zip(data["segments"], lines):
             old_text = segment.get("target") or ""
             if not text.strip():
-                empty_segments += 1
+                self.empty_segments += 1
             elif old_text != text:
                 segment["target"] = text
-                changed_by_user += 1
+                self.changed_by_user += 1
             else:
                 self.unchanged_segments += 1
         self.write_json(json_file, data)
         print(f"TXT -> JSON: segments changed by user: {self.changed_by_user}, unchanged segments {self.unchanged_segments}, empty segments {self.empty_segments} / total {len(data['segments'])}")
-        return changed_by_user
+        return self.changed_by_user
