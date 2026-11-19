@@ -105,4 +105,4 @@ click **JSON -> 2 TXT files**. Translate the contents of the `target.txt` file (
 
 - **Retain the XML tags** visible in the source segment (e.g. `<g id="1">text</g>`) to avoid structural errors in Trados Studio.
 
-- The output `.sdlxliff` file must have a different name or location to the input file.
+  - The output `.sdlxliff` file must have a different name or location to the input file.

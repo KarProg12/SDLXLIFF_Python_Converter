@@ -80,7 +80,7 @@ class Converter:
                 child.tag = self.XLIFF + child.tag
             self.add_namespace(child)
 
-    def export_to_json(self, sdlxliff_file, output_folder):
+    def export_to_json_and_txts(self, sdlxliff_file, output_folder):
         """Reads .sdlxliff and saves export.json in the given folder."""
         segments = []
         # Czytami plik XML po jednym trans-unit
@@ -107,6 +107,14 @@ class Converter:
         os.makedirs(output_folder, exist_ok=True)
         self.write_json(os.path.join(output_folder, "export.json"), {"segments": segments})
         print("Done! Exported", len(segments), "segments.")
+
+        # Otwiera 2 pliki source i target .txt, w source.txt są wszystkie wyciągnięte segmenty
+        # a target.txt jest pusty bo czeka na wklejenie przetłumaczonego tekstu
+        with open(os.path.join(output_folder, "source.txt"), "w", encoding="utf-8") as source_file:
+            with open(os.path.join(output_folder, "target.txt"), "w", encoding="utf-8") as target_file:
+                for segment in segments:
+                    source_file.write(segment["source"].replace("\n", "\\n") + "\n")
+        print("TXT done.")
         return len(segments)
 
     def import_to_sdlxliff(self, sdlxliff_file, json_file, output_file):
@@ -114,8 +122,10 @@ class Converter:
         if output_file == sdlxliff_file:
             print("NOT SAVED: the output file is the same file as the input file!")
             return 0
-        if not os.path.exists(sdlxliff_file + ".bak"):
-            shutil.copy(sdlxliff_file, sdlxliff_file + ".bak")
+        backup_folder = os.path.dirname(json_file)
+        backup_file = os.path.join(backup_folder, os.path.basename(sdlxliff_file) + ".bak")
+        if not os.path.exists(backup_file):
+            shutil.copy(sdlxliff_file, backup_file)
         data = self.read_json(json_file)
         # Slownik: (id_jednostki, id_segmentu) -> tlumaczenie
         translations = {(str(s["trans-unit_id"]), str(s["seg_id"])): s.get("target", "").strip() for s in data["segments"] if s.get("target", "").strip()}
@@ -181,17 +191,6 @@ class Converter:
         print(f"Segments changed by user: {changed_by_user}")
         return inserted
 
-    def export_json_to_txt(self, json_file, output_folder):
-        """JSON -> 2 TXT files: one read-only, one for translating."""
-        data = self.read_json(json_file)
-        os.makedirs(output_folder, exist_ok=True)
-        with open(os.path.join(output_folder, "source.txt"), "w", encoding="utf-8") as source_file:
-            with open(os.path.join(output_folder, "target.txt"), "w", encoding="utf-8") as target_file:
-                for segment in data["segments"]:
-                    source_file.write(segment["source"].replace("\n", "\\n") + "\n")
-        print("TXT done.")
-        return len(data["segments"])
-
     def import_txt_to_json(self, txt_file, json_file):
         """Reads the translated TXT and inserts the translations back into the JSON."""
         data = self.read_json(json_file)
@@ -217,3 +216,7 @@ class Converter:
         self.write_json(json_file, data)
         print(f"TXT -> JSON: segments changed by user: {self.changed_by_user}, unchanged segments {self.unchanged_segments}, empty segments {self.empty_segments} / total {len(data['segments'])}")
         return self.changed_by_user
+
+    def import_txt_to_sdlxliff(self, txt_file, json_file, sdlxliff_file, output_file):
+        self.import_txt_to_json(txt_file, json_file)
+        return self.import_to_sdlxliff(sdlxliff_file, json_file, output_file)

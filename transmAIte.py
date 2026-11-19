@@ -1,11 +1,10 @@
 # Uproszczone GUI - ttk
 # Nic nie trzeba instalowac - ttk jest w Pythonie
-
 from tkinter import filedialog, messagebox
 import tkinter as tk
 from tkinter import ttk
-
 from converter import Converter as CNV
+
 
 class TransMAiTE:
     def __init__(self):
@@ -19,7 +18,7 @@ class TransMAiTE:
 
         self.root_win = tk.Tk()
         self.root_win.title("TransMAiTE")
-        self.root_win.geometry("685x778")
+        self.root_win.geometry("694x545")
         self.root_win.configure(bg=self.BG_DARK)
 
         # Style ttk - kolory ustawiamy RAZ tutaj, widgety tylko wybieraja styl
@@ -45,7 +44,6 @@ class TransMAiTE:
         top.pack(fill="x")
         top.pack_propagate(False)
         ttk.Label(top, text="  TransMAiTE", style="Top.TLabel").pack(side="left")
-        ttk.Label(top, text="SDLXLIFF  <->  TXT  <->  JSON  ", style="TopSmall.TLabel").pack(side="right", padx=12)
 
         # Sciezki - jedna petla, tak jak bylo wczesniej, bo to tu jest czytelniejsze
         self.paths = {}
@@ -68,7 +66,25 @@ class TransMAiTE:
         elif choice_type == "save":
             chosen = filedialog.asksaveasfilename(defaultextension=".sdlxliff")
         if chosen:
+            chosen = chosen.replace("\\", "/")
             path_variable.set(chosen)
+
+            if path_variable is self.paths["export_file"]:
+                self.paths["import_file"].set(chosen)
+                folder = chosen.rsplit("/", 1)[0]
+                name = chosen.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+                project_folder = folder + "/" + name
+                self.paths["export_folder"].set(project_folder)
+                self.paths["txt_folder"].set(project_folder)
+                json_path = project_folder + "/export.json"
+                self.paths["txt_json"].set(json_path)
+                self.paths["import_json"].set(json_path)
+            elif path_variable is self.paths["export_folder"]:
+                self.paths["txt_folder"].set(chosen)
+                json_path = chosen + "/export.json"
+                self.paths["txt_json"].set(json_path)
+                self.paths["import_json"].set(json_path)
+
 
     def section(self, title):
         outer = ttk.Frame(self.root_win, style="Card.TFrame")
@@ -106,40 +122,26 @@ class TransMAiTE:
             messagebox.showerror("Error", str(error))
 
     def on_export_click(self):
-        self.run_task(["export_file", "export_folder"], self.converter.export_to_json, "Export done. Exported ")
+        self.run_task(["export_file", "export_folder"], self.converter.export_to_json_and_txts, "Export done. Exported ")
 
     def on_import_click(self):
-        self.run_task(["import_file", "import_json", "import_save"], self.converter.import_to_sdlxliff, "Import done. Inserted ", "WARNING: Inserted 0. Check whether the output file is not the same file as the input one, or whether the JSON has target translations.")
-
-    def on_txt_export_click(self):
-        self.run_task(["txt_json", "txt_folder"], self.converter.export_json_to_txt, "TXT done. Exported ")
-
-    def on_txt_import_click(self):
-        self.run_task(["txt_to_import", "txt_json"], self.converter.import_txt_to_json, "TXT -> JSON done. Updated ", "WARNING: Updated 0. Check whether the number of lines in the TXT matches the number of segments in the JSON.")
+        self.run_task(["txt_to_import", "import_json", "import_file", "import_save"], self.converter.import_txt_to_sdlxliff, "Import done. Inserted ", "WARNING: Inserted 0. Check whether the output file is not the same file as the input one, or whether the JSON has target translations.")
 
     def build_ui(self):
         # Sekcja 1
-        export_frame = self.section("Export SDLXLIFF ==> JSON - exports only segments without statuses:\n"
-                                    "    Translated, ApprovedTranslation, ApprovedSignOff, locked='true'")
+        export_frame = self.section(">> Export << .sdlxliff ==> export.json & source.txt, target.txt - exports only segments without statuses:\n"
+                                    "    Translated, ApprovedTranslation, ApprovedSignOff, locked='true'\n  After that fetches the sources and targets from export.json to those two .txt files")
         self.row(export_frame, 0, "SDLXLIFF file:", self.paths["export_file"], "file")
         self.row(export_frame, 1, "Output folder:", self.paths["export_folder"], "folder")
         self.button(export_frame, "Export SDLXLIFF to JSON", self.on_export_click).grid(row=2, column=0, columnspan=3, sticky="ew", pady=(8, 0))
 
-        # Sekcja 2
-        txt_frame = self.section("JSON <==> 2x TXT files\n  ! ! NUMBER OF LINES IN source.txt AND target.txt MUST BE THE SAME TO IMPORT target.txt to JSON ! !\n"
-                                 "  - source.txt (all sources except filtered ones in section above),\n  - target.txt (empty file for translated sources)")
-        self.row(txt_frame, 0, "export.json:", self.paths["txt_json"], "file")
-        self.row(txt_frame, 1, "Folder for TXT:", self.paths["txt_folder"], "folder")
-        self.row(txt_frame, 2, "TXT to import:", self.paths["txt_to_import"], "file")
-        self.button(txt_frame, "Extract JSON to source.txt and target.txt files", self.on_txt_export_click).grid(row=3, column=0, columnspan=2, sticky="ew", pady=(8, 0), padx=(0, 4))
-        self.button(txt_frame, "translated target.txt\nback to JSON targets", self.on_txt_import_click).grid(row=3, column=2, sticky="ew", pady=(8, 0))
-
         # Sekcja 3
-        import_frame = self.section("Import JSON ==> SDLXLIFF - imports targets from translated JSON to SDLXLIFF's targets")
+        import_frame = self.section(">> Import << export.json ==> .sdlxliff - imports targets from translated export.json to .sdlxliff's targets")
         self.row(import_frame, 0, "Original SDLXLIFF:", self.paths["import_file"], "file")
         self.row(import_frame, 1, "Translated JSON:", self.paths["import_json"], "file")
-        self.row(import_frame, 2, "Save as:", self.paths["import_save"], "save")
-        self.button(import_frame, "Import to SDLXLIFF", self.on_import_click).grid(row=3, column=0, columnspan=3, sticky="ew", pady=(8, 0))
+        self.row(import_frame, 2, "Translated TXT:", self.paths["txt_to_import"], "file")
+        self.row(import_frame, 3, "Save as:", self.paths["import_save"], "save")
+        self.button(import_frame, "Import to SDLXLIFF", self.on_import_click).grid(row=4, column=0, columnspan=3, sticky="ew", pady=(8, 0))
 
         # Status
         status_bar = ttk.Frame(self.root_win, style="Status.TFrame", height=32)
