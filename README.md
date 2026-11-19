@@ -1,4 +1,4 @@
-# TransmAIte — SDLXLIFF ↔ JSON / TXT Converter
+# TransMAiTE — SDLXLIFF ↔ JSON / TXT Converter
 
 A desktop application written in Python that facilitates the translation of **SDLXLIFF** files (used, amongst other things, in Trados Studio) using AI models
 (LLMs) or external text tools. The programme extracts untranslated segments along with their XML tags, converts them into convenient intermediate formats
