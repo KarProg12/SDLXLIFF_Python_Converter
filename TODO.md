@@ -1,0 +1,6 @@
+# Do zrobienia:
+- [ ] Wykluczyć jescze 2 statusy: TranslationRejected, RejectedSignOff
+- [ ] Wykluczyć repetycje domyślnie
+## Przy imporcie do .sdlxliff:
+- [ ] umożliwić nadpisywanie tłumaczonego pliku .sdlxliff (przy nadpisywaniu utworzyć .bak oryginalnego .sdlxliff)
+- [ ] w polu "Save as" dodawać domyślnie rozszerzenie .sdlxliff do nazwy zapisywanego pliku
