@@ -19,7 +19,7 @@ class Converter:
         self.XML_NS = "{http://www.w3.org/XML/1998/namespace}"
 
         # Te statusy znacza: "juz przetlumaczone, nie ruszaj"
-        self.TRANSLATED_STATUSES = ["Translated", "ApprovedTranslation", "ApprovedSignOff"]
+        self.TRANSLATED_STATUSES = ["Translated", "ApprovedTranslation", "ApprovedSignOff", "RejectedTranslation", "RejectedSignOff"]
 
         self.changed_by_user = 0
         self.unchanged_segments = 0
@@ -119,9 +119,6 @@ class Converter:
 
     def import_to_sdlxliff(self, sdlxliff_file, json_file, output_file):
         """Inserts translations from JSON back into the .sdlxliff file."""
-        if output_file == sdlxliff_file:
-            print("NOT SAVED: the output file is the same file as the input file!")
-            return 0
         backup_folder = os.path.dirname(json_file)
         backup_file = os.path.join(backup_folder, os.path.basename(sdlxliff_file) + ".bak")
         if not os.path.exists(backup_file):
@@ -196,6 +193,8 @@ class Converter:
         data = self.read_json(json_file)
         with open(txt_file, encoding="utf-8") as file:
             lines = [line.rstrip("\n").replace("\\n", "\n") for line in file]
+            if not lines:
+                lines = [""] * len(data["segments"])
         while len(lines) > len(data["segments"]) and lines[-1] == "":
             lines.pop()
         if len(lines) != len(data["segments"]):
@@ -208,6 +207,7 @@ class Converter:
             old_text = segment.get("target") or ""
             if not text.strip():
                 self.empty_segments += 1
+                segment["target"] = ""
             elif old_text != text:
                 segment["target"] = text
                 self.changed_by_user += 1
@@ -217,6 +217,6 @@ class Converter:
         print(f"TXT -> JSON: segments changed by user: {self.changed_by_user}, unchanged segments {self.unchanged_segments}, empty segments {self.empty_segments} / total {len(data['segments'])}")
         return self.changed_by_user
 
-    def import_txt_to_sdlxliff(self, txt_file, json_file, sdlxliff_file, output_file):
+    def import_txt_to_sdlxliff(self, txt_file, json_file, sdlxliff_file):
         self.import_txt_to_json(txt_file, json_file)
-        return self.import_to_sdlxliff(sdlxliff_file, json_file, output_file)
+        return self.import_to_sdlxliff(sdlxliff_file, json_file, sdlxliff_file)
