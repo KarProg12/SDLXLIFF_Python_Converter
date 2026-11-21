@@ -3,4 +3,4 @@
 - [ ] Wykluczyć repetycje domyślnie
 ## Przy imporcie do .sdlxliff:
 - [x] umożliwić nadpisywanie tłumaczonego pliku .sdlxliff (przy nadpisywaniu utworzyć .bak oryginalnego .sdlxliff)
-- [ ] w polu "Save as" dodawać domyślnie rozszerzenie .sdlxliff do nazwy zapisywanego pliku
+- [x] w polu "Save as" dodawać domyślnie rozszerzenie .sdlxliff do nazwy zapisywanego pliku
